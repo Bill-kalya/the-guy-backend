@@ -10,6 +10,7 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         format_sql: true
@@ -28,7 +29,7 @@ spring:
       port: 6379
 
 jwt:
-  secret: "dev-secret-key-for-testing-only"
+  secret: "dev-secret-key-for-testing-only-32chars!!"
   expiration: 86400000
 
 server:

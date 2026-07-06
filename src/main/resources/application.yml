@@ -1,24 +1,30 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/the_guy}
-    username: ${DB_USERNAME:theguy}
-    password: ${DB_PASSWORD:theguy123}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/theguy_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:M@m@b1ll1.}
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
-  
+
   jpa:
     show-sql: false
+    hibernate:
+      ddl-auto: none
     properties:
       hibernate:
         jdbc:
           batch_size: 25
         order_inserts: true
         order_updates: true
-  
+
+  flyway:
+    enabled: true
+    locations: classpath:db
+
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -32,7 +38,7 @@ spring:
           min-idle: 0
 
 jwt:
-  secret: ${JWT_SECRET:change-this-in-production-to-a-very-long-secret-key}
+  secret: mySuperSecretKeyForDevelopmentOnly123456789
   expiration: ${JWT_EXPIRATION:86400000}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
@@ -49,7 +55,7 @@ management:
         include: health,info,metrics
   endpoint:
     health:
-      show-details: always
+      show-details: when-authorized
 
 server:
   tomcat:

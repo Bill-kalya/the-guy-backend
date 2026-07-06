@@ -1,0 +1,7 @@
+.env
+flyway.conf
+*.log
+target/
+.vscode/
+.idea/
+*.iml

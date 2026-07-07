@@ -14,18 +14,65 @@ public class ReviewDTO {
     
     private UUID providerId;
     
-    @Min(value = 1, message = "Quality rating must be between 1 and 5")
-    @Max(value = 5, message = "Quality rating must be between 1 and 5")
-    private Integer ratingQuality;
+    // SQS fields (0-100 scale)
+    @NotNull(message = "Overall experience is required")
+    @Min(value = 0, message = "Score must be between 0 and 100")
+    @Max(value = 100, message = "Score must be between 0 and 100")
+    private Integer overallExperience;
     
-    @Min(value = 1, message = "Reliability rating must be between 1 and 5")
-    @Max(value = 5, message = "Reliability rating must be between 1 and 5")
-    private Integer ratingReliability;
+    @NotNull(message = "Timeliness is required")
+    @Min(value = 0, message = "Score must be between 0 and 100")
+    @Max(value = 100, message = "Score must be between 0 and 100")
+    private Integer timeliness;
     
-    @Min(value = 1, message = "Communication rating must be between 1 and 5")
-    @Max(value = 5, message = "Communication rating must be between 1 and 5")
-    private Integer ratingCommunication;
+    @NotNull(message = "Professionalism is required")
+    @Min(value = 0, message = "Score must be between 0 and 100")
+    @Max(value = 100, message = "Score must be between 0 and 100")
+    private Integer professionalism;
     
-    @NotBlank(message = "Review comment is required")
+    @NotNull(message = "Communication is required")
+    @Min(value = 0, message = "Score must be between 0 and 100")
+    @Max(value = 100, message = "Score must be between 0 and 100")
+    private Integer communication;
+    
+    @NotNull(message = "Courtesy is required")
+    @Min(value = 0, message = "Score must be between 0 and 100")
+    @Max(value = 100, message = "Score must be between 0 and 100")
+    private Integer courtesy;
+    
+    @NotNull(message = "Work quality is required")
+    @Min(value = 0, message = "Score must be between 0 and 100")
+    @Max(value = 100, message = "Score must be between 0 and 100")
+    private Integer workQuality;
+    
+    @NotNull(message = "Attention to detail is required")
+    @Min(value = 0, message = "Score must be between 0 and 100")
+    @Max(value = 100, message = "Score must be between 0 and 100")
+    private Integer attentionToDetail;
+    
+    @NotNull(message = "Cleanliness is required")
+    @Min(value = 0, message = "Score must be between 0 and 100")
+    @Max(value = 100, message = "Score must be between 0 and 100")
+    private Integer cleanliness;
+    
+    @NotNull(message = "Reliability is required")
+    @Min(value = 0, message = "Score must be between 0 and 100")
+    @Max(value = 100, message = "Score must be between 0 and 100")
+    private Integer reliability;
+    
+    @NotNull(message = "Value for money is required")
+    @Min(value = 0, message = "Score must be between 0 and 100")
+    @Max(value = 100, message = "Score must be between 0 and 100")
+    private Integer valueForMoney;
+    
+    @Min(value = 0, message = "Score must be between 0 and 100")
+    @Max(value = 100, message = "Score must be between 0 and 100")
+    private Integer problemResolution;
+    
+    @NotNull(message = "Recommendation is required")
+    @Min(value = 0, message = "Score must be between 0 and 100")
+    @Max(value = 100, message = "Score must be between 0 and 100")
+    private Integer recommendation;
+    
     private String comment;
 }

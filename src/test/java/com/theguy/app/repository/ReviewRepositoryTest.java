@@ -20,14 +20,25 @@ class ReviewRepositoryTest {
     @Test
     void shouldSaveAndFindReview() {
         UUID providerId = UUID.randomUUID();
-        Review review = new Review();
-        review.setJobId(UUID.randomUUID());
-        review.setCustomerId(UUID.randomUUID());
-        review.setProviderId(providerId);
-        review.setRatingQuality(4);
-        review.setRatingReliability(5);
-        review.setRatingCommunication(4);
-        review.setComment("Great service");
+        Review review = Review.builder()
+            .jobId(UUID.randomUUID())
+            .customerId(UUID.randomUUID())
+            .providerId(providerId)
+            .overallExperience(85)
+            .timeliness(90)
+            .professionalism(88)
+            .communication(92)
+            .courtesy(95)
+            .workQuality(87)
+            .attentionToDetail(90)
+            .cleanliness(93)
+            .reliability(89)
+            .valueForMoney(86)
+            .recommendation(95)
+            .serviceQualityScore(90.0)
+            .comment("Great service")
+            .helpfulCount(0)
+            .build();
 
         Review saved = reviewRepository.save(review);
         assertThat(saved.getId()).isNotNull();
@@ -39,34 +50,57 @@ class ReviewRepositoryTest {
     }
 
     @Test
-    void shouldReturnAverageRatings() {
+    void shouldReturnAverageSqs() {
         UUID providerId = UUID.randomUUID();
         UUID customerId = UUID.randomUUID();
         UUID jobId1 = UUID.randomUUID();
         UUID jobId2 = UUID.randomUUID();
 
-        Review r1 = new Review();
-        r1.setJobId(jobId1);
-        r1.setCustomerId(customerId);
-        r1.setProviderId(providerId);
-        r1.setRatingQuality(5);
-        r1.setRatingReliability(5);
-        r1.setRatingCommunication(5);
-        r1.setComment("Excellent");
+        Review r1 = Review.builder()
+            .jobId(jobId1)
+            .customerId(customerId)
+            .providerId(providerId)
+            .overallExperience(95)
+            .timeliness(90)
+            .professionalism(92)
+            .communication(88)
+            .courtesy(95)
+            .workQuality(93)
+            .attentionToDetail(90)
+            .cleanliness(92)
+            .reliability(94)
+            .valueForMoney(91)
+            .recommendation(95)
+            .serviceQualityScore(92.5)
+            .comment("Excellent")
+            .helpfulCount(0)
+            .build();
         reviewRepository.save(r1);
 
-        Review r2 = new Review();
-        r2.setJobId(jobId2);
-        r2.setCustomerId(customerId);
-        r2.setProviderId(providerId);
-        r2.setRatingQuality(3);
-        r2.setRatingReliability(3);
-        r2.setRatingCommunication(3);
-        r2.setComment("Average");
+        Review r2 = Review.builder()
+            .jobId(jobId2)
+            .customerId(customerId)
+            .providerId(providerId)
+            .overallExperience(75)
+            .timeliness(70)
+            .professionalism(72)
+            .communication(78)
+            .courtesy(75)
+            .workQuality(73)
+            .attentionToDetail(70)
+            .cleanliness(72)
+            .reliability(74)
+            .valueForMoney(71)
+            .recommendation(75)
+            .serviceQualityScore(73.0)
+            .comment("Average")
+            .helpfulCount(0)
+            .build();
         reviewRepository.save(r2);
 
-        Object result = reviewRepository.getAverageRatingsByProviderId(providerId);
-        assertThat(result).isNotNull();
+        Double avgSqs = reviewRepository.getAverageSqsByProviderId(providerId);
+        assertThat(avgSqs).isNotNull();
+        assertThat(avgSqs).isEqualTo(82.75); // (92.5 + 73.0) / 2
     }
 
     @Test
@@ -75,14 +109,25 @@ class ReviewRepositoryTest {
         UUID customerId = UUID.randomUUID();
 
         for (int i = 0; i < 3; i++) {
-            Review r = new Review();
-            r.setJobId(UUID.randomUUID());
-            r.setCustomerId(customerId);
-            r.setProviderId(providerId);
-            r.setRatingQuality(4);
-            r.setRatingReliability(4);
-            r.setRatingCommunication(4);
-            r.setComment("Test review " + i);
+            Review r = Review.builder()
+                .jobId(UUID.randomUUID())
+                .customerId(customerId)
+                .providerId(providerId)
+                .overallExperience(85)
+                .timeliness(80)
+                .professionalism(82)
+                .communication(84)
+                .courtesy(85)
+                .workQuality(83)
+                .attentionToDetail(80)
+                .cleanliness(82)
+                .reliability(84)
+                .valueForMoney(81)
+                .recommendation(85)
+                .serviceQualityScore(83.0)
+                .comment("Test review " + i)
+                .helpfulCount(0)
+                .build();
             reviewRepository.save(r);
         }
 
@@ -96,14 +141,25 @@ class ReviewRepositoryTest {
         UUID customerId = UUID.randomUUID();
 
         for (int i = 0; i < 25; i++) {
-            Review r = new Review();
-            r.setJobId(UUID.randomUUID());
-            r.setCustomerId(customerId);
-            r.setProviderId(providerId);
-            r.setRatingQuality(4);
-            r.setRatingReliability(4);
-            r.setRatingCommunication(4);
-            r.setComment("Review " + i);
+            Review r = Review.builder()
+                .jobId(UUID.randomUUID())
+                .customerId(customerId)
+                .providerId(providerId)
+                .overallExperience(85)
+                .timeliness(80)
+                .professionalism(82)
+                .communication(84)
+                .courtesy(85)
+                .workQuality(83)
+                .attentionToDetail(80)
+                .cleanliness(82)
+                .reliability(84)
+                .valueForMoney(81)
+                .recommendation(85)
+                .serviceQualityScore(83.0)
+                .comment("Review " + i)
+                .helpfulCount(0)
+                .build();
             reviewRepository.save(r);
         }
 

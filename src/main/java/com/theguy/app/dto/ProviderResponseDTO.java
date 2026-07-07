@@ -25,6 +25,11 @@ public class ProviderResponseDTO {
     private Boolean isOnline;
     private List<ServiceDTO> services;
     
+    // SQS fields
+    private Double serviceQualityScore;
+    private Integer reviewCount;
+    private ScoreBreakdown breakdown;
+    
     @Data
     @Builder
     public static class ServiceDTO {
@@ -33,5 +38,17 @@ public class ProviderResponseDTO {
         private String title;
         private PricingType pricingType;
         private BigDecimal basePrice;
+    }
+    
+    @Data
+    @Builder
+    public static class ScoreBreakdown {
+        private Double professionalism;
+        private Double communication;
+        private Double timeliness;
+        private Double workQuality;
+        private Double reliability;
+        private Double courtesy;
+        private Double value;
     }
 }

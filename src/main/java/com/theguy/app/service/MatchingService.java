@@ -2,6 +2,7 @@ package com.theguy.app.service;
 
 import com.theguy.app.entity.Job;
 import com.theguy.app.entity.Provider;
+import com.theguy.app.entity.ProviderStatistics;
 import com.theguy.app.repository.JobRepository;
 import com.theguy.app.repository.ProviderRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +20,7 @@ public class MatchingService {
     private final JobRepository jobRepository;
     private final QueueService queueService;
     private final NotificationService notificationService;
+    private final ProviderStatisticsService providerStatisticsService;
 
     @Transactional
     public void startMatching(Job job) {
@@ -57,16 +60,21 @@ public class MatchingService {
     
     private ProviderScore scoreProvider(Provider p, Job job) {
         double distanceScore = 1.0; // Simplified - would calculate from actual distance
-        double reputationScore = p.getRatingAvg() / 5.0;
         double responseScore = p.getResponseRate();
         double priceScore = 1.0; // Simplified - compare to market avg
         double demandBoost = 1.0;
         
-        double finalScore = (0.25 * distanceScore) + 
-                           (0.30 * reputationScore) + 
-                           (0.20 * responseScore) + 
-                           (0.15 * priceScore) + 
-                           (0.10 * demandBoost);
+        // Get SQS (Service Quality Score) from cached statistics
+        Optional<ProviderStatistics> statsOpt = providerStatisticsService.getStatistics(p.getId());
+        double sqsScore = statsOpt.map(ProviderStatistics::getSqs).orElse(0.0) / 100.0; // Normalize to 0-1
+        
+        // Updated scoring formula with SQS
+        // Distance: 40%, SQS: 35%, Response Rate: 15%, Price: 5%, Demand: 5%
+        double finalScore = (0.40 * distanceScore) + 
+                           (0.35 * sqsScore) + 
+                           (0.15 * responseScore) + 
+                           (0.05 * priceScore) + 
+                           (0.05 * demandBoost);
         
         return new ProviderScore(p, finalScore);
     }

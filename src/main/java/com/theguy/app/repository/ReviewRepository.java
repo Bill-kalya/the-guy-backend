@@ -32,25 +32,25 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
                                    org.springframework.data.domain.Pageable pageable);
     
     /**
-     * Get average ratings for a provider
+     * Get average SQS for a provider
      */
-    @Query("SELECT AVG(r.ratingQuality) as avgQuality, " +
-           "AVG(r.ratingReliability) as avgReliability, " +
-           "AVG(r.ratingCommunication) as avgCommunication, " +
-           "COUNT(r) as totalReviews " +
-           "FROM Review r WHERE r.providerId = :providerId")
-    Object[] getAverageRatingsByProviderId(@Param("providerId") UUID providerId);
+    @Query("SELECT COALESCE(AVG(r.serviceQualityScore), 0) FROM Review r WHERE r.providerId = :providerId")
+    Double getAverageSqsByProviderId(@Param("providerId") UUID providerId);
     
     /**
-     * Get rating distribution for a provider
+     * Get average category scores for a provider
      */
-    @Query("SELECT FLOOR((r.ratingQuality + r.ratingReliability + r.ratingCommunication) / 3) as starRating, " +
-           "COUNT(r) as count " +
-           "FROM Review r " +
-           "WHERE r.providerId = :providerId " +
-           "GROUP BY FLOOR((r.ratingQuality + r.ratingReliability + r.ratingCommunication) / 3) " +
-           "ORDER BY starRating DESC")
-    List<Object[]> getRatingDistribution(@Param("providerId") UUID providerId);
+    @Query("SELECT " +
+           "COALESCE(AVG(r.professionalism), 0) as avgProfessionalism, " +
+           "COALESCE(AVG(r.communication), 0) as avgCommunication, " +
+           "COALESCE(AVG(r.timeliness), 0) as avgTimeliness, " +
+           "COALESCE(AVG(r.workQuality), 0) as avgWorkQuality, " +
+           "COALESCE(AVG(r.reliability), 0) as avgReliability, " +
+           "COALESCE(AVG(r.courtesy), 0) as avgCourtesy, " +
+           "COALESCE(AVG(r.valueForMoney), 0) as avgValue, " +
+           "COUNT(r) as totalReviews " +
+           "FROM Review r WHERE r.providerId = :providerId")
+    Object[] getCategoryAveragesByProviderId(@Param("providerId") UUID providerId);
     
     /**
      * Get recent reviews for a provider (last 30 days)
@@ -69,35 +69,21 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
                                    org.springframework.data.domain.Pageable pageable);
     
     /**
-     * Count helpful reviews for a provider
-     */
-    @Query("SELECT SUM(r.helpfulCount) FROM Review r WHERE r.providerId = :providerId")
-    Integer getTotalHelpfulCount(@Param("providerId") UUID providerId);
-    
-    /**
-     * Get average rating for a provider (simplified)
-     */
-    @Query("SELECT COALESCE(AVG((r.ratingQuality + r.ratingReliability + r.ratingCommunication) / 3.0), 0) " +
-           "FROM Review r WHERE r.providerId = :providerId")
-    Double getAverageOverallRating(@Param("providerId") UUID providerId);
-    
-    /**
      * Get total review count for a provider
      */
     @Query("SELECT COUNT(r) FROM Review r WHERE r.providerId = :providerId")
     Long getReviewCountByProviderId(@Param("providerId") UUID providerId);
     
     /**
-     * Get top rated providers (minimum reviews threshold)
+     * Get top rated providers by SQS (minimum reviews threshold)
      */
-    @Query("SELECT r.providerId, AVG((r.ratingQuality + r.ratingReliability + r.ratingCommunication) / 3.0) as avgRating, " +
-           "COUNT(r) as reviewCount " +
+    @Query("SELECT r.providerId, AVG(r.serviceQualityScore) as avgSqs, COUNT(r) as reviewCount " +
            "FROM Review r " +
            "GROUP BY r.providerId " +
            "HAVING COUNT(r) >= :minReviews " +
-           "ORDER BY avgRating DESC")
-    List<Object[]> findTopRatedProviders(@Param("minReviews") int minReviews, 
-                                          org.springframework.data.domain.Pageable pageable);
+           "ORDER BY avgSqs DESC")
+    List<Object[]> findTopRatedProvidersBySqs(@Param("minReviews") int minReviews, 
+                                              org.springframework.data.domain.Pageable pageable);
     
     /**
      * Delete all reviews for a provider (admin use)
@@ -115,36 +101,19 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
                                         @Param("providerId") UUID providerId);
     
     /**
-     * Get reviews with verified purchase only
+     * Get reviews with comments (text reviews)
      */
-    @Query("SELECT r FROM Review r WHERE r.providerId = :providerId AND r.isVerifiedPurchase = true " +
+    @Query("SELECT r FROM Review r WHERE r.providerId = :providerId AND LENGTH(r.comment) > 10 " +
            "ORDER BY r.createdAt DESC")
-    List<Review> findVerifiedReviewsByProviderId(@Param("providerId") UUID providerId,
-                                                  org.springframework.data.domain.Pageable pageable);
-    
-    /**
-     * Get reviews that need moderation (suspicious patterns)
-     */
-    @Query("SELECT r FROM Review r WHERE r.comment LIKE '%fake%' OR r.comment LIKE '%scam%' " +
-           "OR r.ratingQuality = 1 OR r.ratingReliability = 1 OR r.ratingCommunication = 1 " +
-           "ORDER BY r.createdAt DESC")
-    List<Review> findSuspiciousReviews(org.springframework.data.domain.Pageable pageable);
-    
-    /**
-     * Update review helpful count
-     */
-    @Modifying
-    @Transactional
-    @Query("UPDATE Review r SET r.helpfulCount = r.helpfulCount + 1, r.isHelpful = true " +
-           "WHERE r.id = :reviewId")
-    void incrementHelpfulCount(@Param("reviewId") UUID reviewId);
+    List<Review> findReviewsWithCommentsByProviderId(@Param("providerId") UUID providerId,
+                                                     org.springframework.data.domain.Pageable pageable);
     
     /**
      * Get monthly review trend for a provider
      */
     @Query(value = "SELECT DATE_TRUNC('month', created_at) as month, " +
            "COUNT(*) as review_count, " +
-           "AVG((rating_quality + rating_reliability + rating_communication) / 3.0) as avg_rating " +
+           "AVG(service_quality_score) as avg_sqs " +
            "FROM reviews " +
            "WHERE provider_id = :providerId " +
            "AND created_at >= :startDate " +
@@ -155,13 +124,13 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
                                          @Param("startDate") java.time.LocalDateTime startDate);
     
     /**
-     * Get reviews by rating range
+     * Get reviews by SQS range
      */
     @Query("SELECT r FROM Review r WHERE r.providerId = :providerId " +
-           "AND ((r.ratingQuality + r.ratingReliability + r.ratingCommunication) / 3) BETWEEN :minRating AND :maxRating")
-    List<Review> findByRatingRange(@Param("providerId") UUID providerId,
-                                    @Param("minRating") double minRating,
-                                    @Param("maxRating") double maxRating);
+           "AND r.serviceQualityScore BETWEEN :minSqs AND :maxSqs")
+    List<Review> findBySqsRange(@Param("providerId") UUID providerId,
+                                @Param("minSqs") double minSqs,
+                                @Param("maxSqs") double maxSqs);
     
     /**
      * Count reviews with comments (text reviews)
@@ -170,10 +139,10 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     Long countReviewsWithComments(@Param("providerId") UUID providerId);
     
     /**
-     * Get average response time to reviews (when provider responds to customer review)
+     * Increment the helpful count for a review
      */
-    @Query(value = "SELECT AVG(EXTRACT(EPOCH FROM (r.provider_responded_at - r.created_at))) " +
-           "FROM reviews r WHERE r.provider_id = :providerId AND r.provider_responded_at IS NOT NULL",
-           nativeQuery = true)
-    Double getAverageResponseTimeToReviews(@Param("providerId") UUID providerId);
+    @Modifying
+    @Transactional
+    @Query("UPDATE Review r SET r.helpfulCount = r.helpfulCount + 1 WHERE r.id = :reviewId")
+    void incrementHelpfulCount(@Param("reviewId") UUID reviewId);
 }

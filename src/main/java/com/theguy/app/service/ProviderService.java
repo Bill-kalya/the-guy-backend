@@ -21,6 +21,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+// Import for ProviderStatistics
+import com.theguy.app.service.ProviderStatisticsService;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -31,6 +34,7 @@ public class ProviderService {
     private final ServiceRepository serviceRepository;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
+    private final ProviderStatisticsService providerStatisticsService;
     
     @Transactional
     public Provider registerProvider(User user, ProviderRegistrationDTO dto) {
@@ -134,6 +138,29 @@ public class ProviderService {
 
     @Transactional(readOnly = true)
     public ProviderResponseDTO mapToResponseDTO(Provider provider) {
+        // Get provider statistics
+        var statsOpt = providerStatisticsService.getStatistics(provider.getId());
+        
+        ProviderResponseDTO.ScoreBreakdown breakdown = null;
+        Double sqs = null;
+        Integer reviewCount = null;
+        
+        if (statsOpt.isPresent()) {
+            var stats = statsOpt.get();
+            sqs = stats.getSqs();
+            reviewCount = stats.getReviewCount();
+            
+            breakdown = ProviderResponseDTO.ScoreBreakdown.builder()
+                .professionalism(stats.getProfessionalismScore())
+                .communication(stats.getCommunicationScore())
+                .timeliness(stats.getTimelinessScore())
+                .workQuality(stats.getWorkQualityScore())
+                .reliability(stats.getReliabilityScore())
+                .courtesy(stats.getCourtesyScore())
+                .value(stats.getValueScore())
+                .build();
+        }
+        
         return ProviderResponseDTO.builder()
             .id(provider.getId())
             .fullName(provider.getUser().getFullName())
@@ -148,6 +175,9 @@ public class ProviderService {
             .responseRate(provider.getResponseRate())
             .repeatClientsPercentage(provider.getRepeatClientsPercentage())
             .isOnline(provider.isOnline())
+            .serviceQualityScore(sqs)
+            .reviewCount(reviewCount)
+            .breakdown(breakdown)
             .services(serviceRepository.findByProviderId(provider.getId()).stream()
                 .map(s -> ProviderResponseDTO.ServiceDTO.builder()
                     .id(s.getId())

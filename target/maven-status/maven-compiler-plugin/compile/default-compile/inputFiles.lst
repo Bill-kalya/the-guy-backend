@@ -18,8 +18,10 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ApiResp
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\JobRequestDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Message.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\JobController.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\ProviderStatistics.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\CategoryDto.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\UserServiceImpl.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\ProviderStatisticsRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\PaymentStatus.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\MessageRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\User.java
@@ -41,6 +43,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ReviewD
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ResetPasswordRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Payment.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\PaymentService.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ProviderStatisticsService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\BaseEntity.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\config\WebSocketConfig.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\JobRequest.java
@@ -80,6 +83,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\Que
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\AuthService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\PaymentMethod.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\PricingType.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\util\SqsCalculator.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\JobService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Job.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ProviderRegistrationDTO.java

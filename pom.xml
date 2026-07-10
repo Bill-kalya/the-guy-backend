@@ -93,6 +93,13 @@
             <optional>true</optional>
         </dependency>
         
+        <!-- Load .env files into Spring Environment -->
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>spring-dotenv</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
         <!-- For testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -51,6 +51,9 @@ public class MatchingLog extends BaseEntity {
     
     private Long responseTimeMs;
     
-    @Column(columnDefinition = "jsonb")
+    // H2 compatibility: JSONB is not supported by H2 in tests.
+    // In Postgres this will still store JSON as TEXT.
+    @Column(columnDefinition = "TEXT")
     private String debugData;
+
 }

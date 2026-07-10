@@ -9,9 +9,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.GeoOperations;
 
 @Configuration
 public class RedisConfig {
+
 
     @Value("${spring.data.redis.host:localhost}")
     private String redisHost;
@@ -50,6 +52,11 @@ public class RedisConfig {
         
         template.afterPropertiesSet();
         return template;
+    }
+
+    @Bean
+    public GeoOperations<String, Object> geoOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForGeo();
     }
 
 }

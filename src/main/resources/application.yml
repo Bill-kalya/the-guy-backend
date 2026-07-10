@@ -62,3 +62,17 @@ server:
     max-threads: 200
     min-spare-threads: 10
     accept-count: 100
+
+# External URLs
+api:
+  url: ${API_URL:https://api.theguy.com}
+ws:
+  url: ${WS_URL:wss://api.theguy.com}
+
+# Allowed websocket origins (used by Spring STOMP endpoint)
+websocket:
+  allowed-origins:
+    - ${WEBSOCKET_ALLOWED_ORIGIN_1:https://app.theguy.co.ke}
+    - ${WEBSOCKET_ALLOWED_ORIGIN_2:http://localhost:3000}
+  sockjs:
+    client-library-url: ${WEBSOCKET_SOCKJS_CLIENT_URL:https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js}

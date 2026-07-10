@@ -26,11 +26,29 @@ ALTER TABLE provider_locations
 ALTER COLUMN latitude SET NOT NULL,
 ALTER COLUMN longitude SET NOT NULL;
 
--- Add check constraints for valid coordinate ranges
-ALTER TABLE provider_locations 
-ADD CONSTRAINT IF NOT EXISTS chk_latitude_range 
-CHECK (latitude >= -90 AND latitude <= 90);
+-- Add check constraints for valid coordinate ranges (PostgreSQL does not support IF NOT EXISTS for constraints)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'chk_latitude_range'
+    ) THEN
+        ALTER TABLE provider_locations
+        ADD CONSTRAINT chk_latitude_range
+        CHECK (latitude >= -90 AND latitude <= 90);
+    END IF;
+END $$;
 
-ALTER TABLE provider_locations 
-ADD CONSTRAINT IF NOT EXISTS chk_longitude_range 
-CHECK (longitude >= -180 AND longitude <= 180);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'chk_longitude_range'
+    ) THEN
+        ALTER TABLE provider_locations
+        ADD CONSTRAINT chk_longitude_range
+        CHECK (longitude >= -180 AND longitude <= 180);
+    END IF;
+END $$;

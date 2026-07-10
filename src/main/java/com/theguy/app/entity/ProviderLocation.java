@@ -16,7 +16,7 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 public class ProviderLocation extends BaseEntity {
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "provider_id", nullable = false, unique = true)
     private UUID providerId;
 
     @Column(nullable = false)

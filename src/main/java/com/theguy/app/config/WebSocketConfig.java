@@ -7,6 +7,7 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 @Configuration
@@ -15,6 +16,20 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final WebSocketAuthInterceptor webSocketAuthInterceptor;
+
+    @Value("${WEBSOCKET_ALLOWED_ORIGIN_1:https://app.theguy.co.ke}")
+    private String websocketAllowedOrigin1;
+
+    @Value("${WEBSOCKET_ALLOWED_ORIGIN_2:http://localhost:3000}")
+    private String websocketAllowedOrigin2;
+
+    @Value("${WEBSOCKET_SOCKJS_CLIENT_URL:https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js}")
+    private String sockJsClientLibraryUrl;
+
+    private String[] websocketAllowedOrigins() {
+        return new String[]{websocketAllowedOrigin1, websocketAllowedOrigin2};
+    }
+
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -25,10 +40,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // NOTE: SockJS client-library URL + allowed origins are configured via application.yml
+        // to avoid hardcoding environments.
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("https://app.theguy.co.ke", "http://localhost:3000")
+                .setAllowedOrigins(websocketAllowedOrigins())
+
                 .withSockJS()
-                .setClientLibraryUrl("https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js")
+                .setClientLibraryUrl(sockJsClientLibraryUrl)
                 .setStreamBytesLimit(512 * 1024)
                 .setHttpMessageCacheSize(1000)
                 .setDisconnectDelay(30 * 1000);

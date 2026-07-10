@@ -71,6 +71,11 @@ public class LocationWebSocketController {
             SimpMessageHeaderAccessor headerAccessor) {
 
         // Get customer ID from auth
+        if (headerAccessor.getUser() == null) {
+            log.warn("Unauthenticated tracking request for provider {}", providerId);
+            return;
+        }
+
         String customerId = headerAccessor.getUser().getName();
 
         // Get current location of provider

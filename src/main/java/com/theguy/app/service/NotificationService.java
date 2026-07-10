@@ -70,6 +70,16 @@ public class NotificationService {
     }
     
     @Async("notificationExecutor")
+    public void sendToUser(String userId, String destination, Object payload) {
+        try {
+            messagingTemplate.convertAndSendToUser(userId, destination, payload);
+            log.debug("Message sent to user {} on {}", userId, destination);
+        } catch (Exception e) {
+            log.error("Failed to send message to user {}: {}", userId, e.getMessage());
+        }
+    }
+
+    @Async("notificationExecutor")
     public void broadcastToTopic(String topic, Object payload) {
         try {
             messagingTemplate.convertAndSend("/topic/" + topic, payload);

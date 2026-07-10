@@ -1,10 +1,13 @@
 package com.theguy.app.service;
 
+import com.theguy.app.dto.NearbyProviderDTO;
 import com.theguy.app.entity.Job;
 import com.theguy.app.entity.Provider;
+import com.theguy.app.entity.ProviderLocation;
 import com.theguy.app.entity.ProviderStatistics;
 import com.theguy.app.repository.JobRepository;
 import com.theguy.app.repository.ProviderRepository;
+import com.theguy.app.repository.ProviderLocationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,11 +15,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class MatchingService {
     private final ProviderRepository providerRepository;
+    private final ProviderLocationRepository locationRepository;
     private final JobRepository jobRepository;
     private final QueueService queueService;
     private final NotificationService notificationService;
@@ -24,17 +30,34 @@ public class MatchingService {
 
     @Transactional
     public void startMatching(Job job) {
-        // Step 1: Find nearby providers
+        // Step 1: Find nearby providers using LocationService-compatible approach
         double radius = job.getUrgency() == com.theguy.app.enums.Urgency.INSTANT ? 5000 : 15000;
-        List<Provider> candidates = providerRepository.findNearbyProviders(
-            job.getLatitude(), job.getLongitude(), radius
+        
+        com.theguy.app.utils.LocationUtils.BoundingBox bbox = 
+            com.theguy.app.utils.LocationUtils.getBoundingBox(job.getLatitude(), job.getLongitude(), radius);
+        
+        List<ProviderLocation> nearbyLocations = locationRepository.findNearbyProviders(
+            job.getLatitude(), job.getLongitude(), radius,
+            bbox.minLat, bbox.maxLat, bbox.minLng, bbox.maxLng
         );
+        
+        List<UUID> providerIds = nearbyLocations.stream()
+            .map(ProviderLocation::getProviderId)
+            .collect(Collectors.toList());
+        
+        List<Provider> candidates = providerRepository.findAllById(providerIds);
         
         if (candidates.isEmpty()) {
             // Fallback: expand radius
-            candidates = providerRepository.findNearbyProviders(
-                job.getLatitude(), job.getLongitude(), radius * 2
+            bbox = com.theguy.app.utils.LocationUtils.getBoundingBox(job.getLatitude(), job.getLongitude(), radius * 2);
+            nearbyLocations = locationRepository.findNearbyProviders(
+                job.getLatitude(), job.getLongitude(), radius * 2,
+                bbox.minLat, bbox.maxLat, bbox.minLng, bbox.maxLng
             );
+            providerIds = nearbyLocations.stream()
+                .map(ProviderLocation::getProviderId)
+                .collect(Collectors.toList());
+            candidates = providerRepository.findAllById(providerIds);
         }
         
         // Step 2: Score and rank providers

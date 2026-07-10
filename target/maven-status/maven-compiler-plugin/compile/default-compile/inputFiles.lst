@@ -9,8 +9,10 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\auth\JwtUti
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\config\WebSocketAuthInterceptor.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\ProviderLocation.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ReviewService.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\NearbyProviderDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\UserDto.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\PaymentRequestDTO.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\LocationWebSocketController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\JobResponseDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\MpesaRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\config\RedisConfig.java
@@ -34,6 +36,8 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Prov
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\EmailRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\ProviderRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\ServiceRepository.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\utils\LocationUtils.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\LocationController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\RegisterRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\MessageDto.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\ProviderController.java
@@ -71,6 +75,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\config\Asyn
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Review.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\VerificationLevel.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\ReviewController.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\LocationService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\UserService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\UserController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\MatchingService.java

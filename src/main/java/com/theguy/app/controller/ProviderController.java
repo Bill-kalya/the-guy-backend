@@ -1,12 +1,14 @@
 package com.theguy.app.controller;
 
 import com.theguy.app.dto.ApiResponse;
+import com.theguy.app.dto.NearbyProviderDTO;
 import com.theguy.app.dto.ProviderRegistrationDTO;
 import com.theguy.app.dto.ProviderResponseDTO;
 import com.theguy.app.entity.Provider;
 import com.theguy.app.entity.User;
 import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.UserRepository;
+import com.theguy.app.service.LocationService;
 import com.theguy.app.service.ProviderService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -33,6 +35,7 @@ public class ProviderController {
     private final ProviderService providerService;
     private final ProviderRepository providerRepository;
     private final UserRepository userRepository;
+    private final LocationService locationService;
     
     @PostMapping("/register")
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -61,27 +64,17 @@ public class ProviderController {
     }
     
     @GetMapping("/nearby")
-    public ResponseEntity<ApiResponse<List<ProviderResponseDTO>>> getNearbyProviders(
+    public ResponseEntity<ApiResponse<List<NearbyProviderDTO>>> getNearbyProviders(
             @RequestParam @Min(-90) @Max(90) double lat,
             @RequestParam @Min(-180) @Max(180) double lng,
             @RequestParam(defaultValue = "5000") @Min(100) @Max(50000) double radius,
             @RequestParam(required = false) String category) {
         
-        List<Provider> providers = providerRepository.findNearbyProviders(lat, lng, radius);
+        List<NearbyProviderDTO> providers = locationService.findNearbyProviders(
+            lat, lng, radius, category
+        );
         
-        if (category != null && !category.isEmpty()) {
-            providers = providers.stream()
-                .filter(p -> p.getServices().stream()
-                    .anyMatch(s -> s.getCategory().equalsIgnoreCase(category)))
-                .collect(Collectors.toList());
-        }
-        
-        List<ProviderResponseDTO> response = providers.stream()
-            .limit(20)
-            .map(providerService::mapToResponseDTO)
-            .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(ApiResponse.success(providers));
     }
     
     @PatchMapping("/status")

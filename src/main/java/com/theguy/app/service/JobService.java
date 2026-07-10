@@ -31,6 +31,7 @@ public class JobService {
     private final PricingService pricingService;
     private final MatchingService matchingService;
     private final NotificationService notificationService;
+    private final LocationService locationService;
     
     @Transactional
     public Job requestJob(JobRequestDTO dto, User customer) {
@@ -224,9 +225,9 @@ public class JobService {
     @Transactional(readOnly = true)
     public List<JobResponseDTO> getNearbyJobs(double lat, double lng) {
         // Use a default radius of 5000 meters for nearby search
-        List<Provider> nearbyProviders = providerRepository.findNearbyProviders(lat, lng, 5000);
+        List<com.theguy.app.dto.NearbyProviderDTO> nearbyProviders = locationService.findNearbyProviders(lat, lng, 5000, null);
         List<UUID> providerIds = nearbyProviders.stream()
-                .map(Provider::getId)
+                .map(com.theguy.app.dto.NearbyProviderDTO::getId)
                 .collect(Collectors.toList());
 
         return jobRepository.findByProviderIdIn(providerIds).stream()

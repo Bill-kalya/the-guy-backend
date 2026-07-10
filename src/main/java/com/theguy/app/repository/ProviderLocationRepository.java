@@ -13,20 +13,57 @@ import java.util.UUID;
 
 @Repository
 public interface ProviderLocationRepository extends JpaRepository<ProviderLocation, UUID> {
-    
+
     Optional<ProviderLocation> findByProviderId(UUID providerId);
-    
-    @Query(value = "SELECT pl.* FROM provider_locations pl " +
-           "WHERE ST_DWithin(location, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius) " +
-           "ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography) " +
-           "LIMIT :limit", nativeQuery = true)
-    List<ProviderLocation> findNearbyLocations(@Param("lat") double lat,
-                                                @Param("lng") double lng,
-                                                @Param("radius") double radius,
-                                                @Param("limit") int limit);
-    
+
+    /**
+     * Find nearby providers using bounding box + haversine distance calculation
+     * This is faster than using PostGIS and works on any database
+     */
+    @Query(value = """
+        SELECT pl.*
+        FROM provider_locations pl
+        INNER JOIN providers p ON p.id = pl.provider_id
+        WHERE
+            p.is_online = true
+            AND pl.latitude BETWEEN :minLat AND :maxLat
+            AND pl.longitude BETWEEN :minLng AND :maxLng
+            AND (
+                6371000 * acos(
+                    cos(radians(:lat))
+                    * cos(radians(pl.latitude))
+                    * cos(radians(pl.longitude) - radians(:lng))
+                    + sin(radians(:lat))
+                    * sin(radians(pl.latitude))
+                )
+            ) <= :radius
+        ORDER BY
+            (
+                6371000 * acos(
+                    cos(radians(:lat))
+                    * cos(radians(pl.latitude))
+                    * cos(radians(pl.longitude) - radians(:lng))
+                    + sin(radians(:lat))
+                    * sin(radians(pl.latitude))
+                )
+            ) ASC
+        LIMIT 50
+    """, nativeQuery = true)
+    List<ProviderLocation> findNearbyProviders(
+        @Param("lat") double lat,
+        @Param("lng") double lng,
+        @Param("radius") double radius,
+        @Param("minLat") double minLat,
+        @Param("maxLat") double maxLat,
+        @Param("minLng") double minLng,
+        @Param("maxLng") double maxLng
+    );
+
     @Modifying
     @Transactional
     @Query("DELETE FROM ProviderLocation pl WHERE pl.providerId = :providerId")
     void deleteByProviderId(@Param("providerId") UUID providerId);
+
+    @Query("SELECT pl FROM ProviderLocation pl WHERE pl.providerId IN :providerIds")
+    List<ProviderLocation> findByProviderIds(@Param("providerIds") List<UUID> providerIds);
 }

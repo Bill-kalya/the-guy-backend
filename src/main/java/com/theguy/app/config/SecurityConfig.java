@@ -55,6 +55,7 @@ public class SecurityConfig {
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/swagger-ui.html")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/error")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/api/providers/nearby")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/jobs/**")).authenticated()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/providers/**")).authenticated()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/reviews/**")).authenticated()

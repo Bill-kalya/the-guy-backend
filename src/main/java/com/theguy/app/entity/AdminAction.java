@@ -19,10 +19,10 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 public class AdminAction extends BaseEntity {
 
-    @Column(nullable = false)
+    @Column(name = "admin_id", nullable = false)
     private UUID adminId;
 
-    @Column(nullable = false)
+    @Column(name = "action_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private ActionType actionType;
 
@@ -62,4 +62,3 @@ public class AdminAction extends BaseEntity {
             FORCE_LOGOUT
     }
 }
-

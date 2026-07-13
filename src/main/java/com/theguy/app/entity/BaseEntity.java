@@ -14,6 +14,7 @@ public abstract class BaseEntity {
     private UUID id;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     public UUID getId() {

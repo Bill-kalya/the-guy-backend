@@ -35,7 +35,7 @@ public class ModerationCase extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String evidence;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private ModerationStatus status;
 
@@ -43,6 +43,7 @@ public class ModerationCase extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private ModerationPriority priority;
 
+    @Column(name = "assignee_id")
     private UUID assigneeId;
 
     @Column(columnDefinition = "TEXT")

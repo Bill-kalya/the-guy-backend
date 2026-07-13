@@ -19,7 +19,7 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 public class Dispute extends BaseEntity {
 
-    @Column(nullable = false)
+    @Column(name = "job_id", nullable = false)
     private UUID jobId;
 
     @Column(nullable = false)
@@ -38,7 +38,7 @@ public class Dispute extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private DisputeCategory category;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private DisputeStatus status;
 
@@ -46,6 +46,7 @@ public class Dispute extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private DisputePriority priority;
 
+    @Column(name = "assignee_id")
     private UUID assigneeId;
 
     private UUID resolutionId;

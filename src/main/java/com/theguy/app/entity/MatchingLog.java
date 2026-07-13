@@ -7,18 +7,18 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "matching_logs", indexes = {
-    @Index(name = "idx_matching_logs_job", columnList = "jobId"),
-    @Index(name = "idx_matching_logs_provider", columnList = "providerId"),
-    @Index(name = "idx_matching_logs_created", columnList = "createdAt")
+    @Index(name = "idx_matching_logs_job", columnList = "job_id"),
+    @Index(name = "idx_matching_logs_provider", columnList = "provider_id"),
+    @Index(name = "idx_matching_logs_created", columnList = "created_at")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class MatchingLog extends BaseEntity {
     
-    @Column(nullable = false)
+    @Column(name = "job_id", nullable = false)
     private UUID jobId;
     
-    @Column(nullable = false)
+    @Column(name = "provider_id", nullable = false)
     private UUID providerId;
     
     @Column

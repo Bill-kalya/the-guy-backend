@@ -11,22 +11,22 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "payments", indexes = {
-    @Index(name = "idx_payments_job", columnList = "jobId"),
-    @Index(name = "idx_payments_customer", columnList = "customerId"),
-    @Index(name = "idx_payments_provider", columnList = "providerId"),
+    @Index(name = "idx_payments_job", columnList = "job_id"),
+    @Index(name = "idx_payments_customer", columnList = "customer_id"),
+    @Index(name = "idx_payments_provider", columnList = "provider_id"),
     @Index(name = "idx_payments_status", columnList = "status")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class Payment extends BaseEntity {
     
-    @Column(nullable = false)
+@Column(name = "job_id", nullable = false)
     private UUID jobId;
     
-    @Column(nullable = false)
+    @Column(name = "customer_id", nullable = false)
     private UUID customerId;
     
-    @Column(nullable = false)
+    @Column(name = "provider_id", nullable = false)
     private UUID providerId;
     
     @Column(nullable = false, precision = 10, scale = 2)

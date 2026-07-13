@@ -4,8 +4,8 @@
 CREATE TABLE IF NOT EXISTS provider_locations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     provider_id UUID NOT NULL UNIQUE REFERENCES providers(id) ON DELETE CASCADE,
-    latitude DOUBLE PRECISION NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
+    latitude DOUBLE PRECISION NOT NULL CHECK (latitude >= -90 AND latitude <= 90),
+    longitude DOUBLE PRECISION NOT NULL CHECK (longitude >= -180 AND longitude <= 180),
     heading DOUBLE PRECISION,
     speed DOUBLE PRECISION,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -65,9 +65,9 @@ server:
 
 # External URLs
 api:
-  url: ${API_URL:https://the-guy-backend-production.up.railway.app}
+  url: ${API_URL:https://api.theguy.co.ke}
 ws:
-  url: ${WS_URL:wss://the-guy-backend-production.up.railway.app}
+  url: ${WS_URL:wss://api.theguy.co.ke}
 
 # Allowed websocket origins (used by Spring STOMP endpoint)
 websocket:

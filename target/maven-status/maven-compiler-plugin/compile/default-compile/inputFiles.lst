@@ -21,6 +21,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\UserActionRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\ServiceRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\utils\LocationUtils.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\VerifyOtpRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\Urgency.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\ChatController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ReviewDTO.java
@@ -31,6 +32,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\JobR
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\auth\RateLimitInterceptor.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\config\SecurityConfig.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\AdminActionService.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\OtpPurpose.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\auth\JwtFilter.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\NotificationService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\JobRequestRepository.java
@@ -46,6 +48,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\Payme
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\PricingType.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ProviderRegistrationDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\CategoryController.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ResendEmailService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ProviderService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\auth\JwtUtil.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Dispute.java
@@ -71,6 +74,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\RegisterRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\MessageDto.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\ProviderController.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\OtpService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\PaymentService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ProviderStatisticsService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\config\WebSocketConfig.java

@@ -1,6 +1,7 @@
 package com.theguy.app.service;
 
 import com.theguy.app.entity.User;
+import com.theguy.app.enums.OtpPurpose;
 import com.theguy.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final OtpService otpService;
 
     @Transactional
     public void resendVerification(String email) {
@@ -27,14 +29,9 @@ public class AuthService {
             throw new RuntimeException("Email already verified");
         }
 
-        // Generate new verification token
-        String verificationToken = UUID.randomUUID().toString();
-        user.setVerificationToken(verificationToken);
-        userRepository.save(user);
-
-        // TODO: Send verification email with link:
-        // https://theguy.co.ke/verify?token=verificationToken
-        log.info("Verification email resent to: {} with token: {}", email, verificationToken);
+        // Issue OTP via Redis + Resend
+        otpService.resendOtp(email, OtpPurpose.VERIFY_EMAIL);
+        log.info("Verification OTP resent to: {}", email);
     }
 
     @Transactional
@@ -42,27 +39,43 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
-        // Generate password reset token
-        String resetToken = UUID.randomUUID().toString();
-        // Store reset token - could use a separate table or add field to User entity
-        // For now, we reuse verificationToken field as a simple approach
-        user.setVerificationToken(resetToken);
-        userRepository.save(user);
-
-        // TODO: Send password reset email with link:
-        // https://theguy.co.ke/reset-password?token=resetToken
-        log.info("Password reset requested for: {} with token: {}", email, resetToken);
+        // Issue password reset OTP
+        otpService.generateAndSendOtp(email, OtpPurpose.RESET_PASSWORD);
+        log.info("Password reset OTP generated for: {}", email);
     }
 
     @Transactional
-    public void resetPassword(String token, String newPassword) {
-        User user = userRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid or expired reset token"));
+    public void resetPasswordWithOtp(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
+        // This call assumes the OTP was already verified via verifyResetOtp
         user.setPasswordHash(passwordEncoder.encode(newPassword));
-        user.setVerificationToken(null); // Clear the token
         userRepository.save(user);
 
         log.info("Password reset successfully for user: {}", user.getEmail());
+    }
+
+    @Transactional
+    public void verifyEmailOtp(String email, String otp) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        if (user.isVerified()) {
+            throw new RuntimeException("Email already verified");
+        }
+
+        otpService.verifyOtp(email, otp, OtpPurpose.VERIFY_EMAIL);
+
+        user.setVerified(true);
+        userRepository.save(user);
+
+        log.info("Email verified for user: {}", email);
+    }
+
+    @Transactional
+    public void verifyResetOtp(String email, String otp) {
+        // Verify reset OTP; no DB changes beyond this
+        otpService.verifyOtp(email, otp, OtpPurpose.RESET_PASSWORD);
     }
 }

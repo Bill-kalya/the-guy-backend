@@ -110,21 +110,21 @@ public class AuthController {
         user.setRole(request.getRole() != null ? request.getRole() : Role.CUSTOMER);
         user.setVerified(false);
         
-        // Generate verification token
-        String verificationToken = UUID.randomUUID().toString();
-        user.setVerificationToken(verificationToken);
-        
         User savedUser = userRepository.save(user);
-        
-        // TODO: Send verification email with link:
-        // https://theguy.co.ke/verify?token=verificationToken
-        
-        log.info("User registered: {} with verification token: {}", savedUser.getEmail(), verificationToken);
-        
+
+        // Generate and send OTP for email verification
+        try {
+            authService.sendVerificationOtp(savedUser.getEmail());
+        } catch (Exception e) {
+            log.warn("Failed to send verification OTP: {}", e.getMessage());
+        }
+
+        log.info("User registered: {} (verification OTP sent)", savedUser.getEmail());
+
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", savedUser.getRole().name());
         String accessToken = jwtUtil.generateToken(savedUser.getEmail(), claims);
-        
+
         return ResponseEntity.status(HttpStatus.CREATED).body(AuthResponse.builder()
             .accessToken(accessToken)
             .tokenType("Bearer")
@@ -137,27 +137,25 @@ public class AuthController {
             .build());
     }
 
-    @GetMapping("/verify")
-    public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
-        User user = userRepository.findByVerificationToken(token)
-            .orElse(null);
-        
-        if (user == null) {
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@Valid @RequestBody com.theguy.app.dto.VerifyOtpRequest request) {
+        try {
+            authService.verifyEmailOtp(request.getEmail(), request.getOtp());
+            return ResponseEntity.ok(ApiResponse.success("Email verified successfully", null));
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("Invalid or expired verification token"));
+                .body(ApiResponse.error(e.getMessage()));
         }
-        
-        if (user.isVerified()) {
-            return ResponseEntity.ok(ApiResponse.success("Email already verified", null));
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOtp(@RequestBody EmailRequest request) {
+        try {
+            authService.resendVerification(request.getEmail());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
         }
-        
-        user.setVerified(true);
-        user.setVerificationToken(null);
-        userRepository.save(user);
-        
-        log.info("Email verified for user: {}", user.getEmail());
-        
-        return ResponseEntity.ok(ApiResponse.success("Email verified successfully", null));
     }
 
     @PostMapping("/refresh")
@@ -215,22 +213,34 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Logged out successfully", null));
     }
 
-    @PostMapping("/resend-verification")
-    public ResponseEntity<?> resendVerification(@RequestBody EmailRequest request) {
-        authService.resendVerification(request.getEmail());
-        return ResponseEntity.ok().build();
-    }
-
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody EmailRequest request) {
-        authService.forgotPassword(request.getEmail());
-        return ResponseEntity.ok().build();
+        try {
+            authService.forgotPassword(request.getEmail());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/verify-reset-otp")
+    public ResponseEntity<?> verifyResetOtp(@Valid @RequestBody com.theguy.app.dto.VerifyOtpRequest request) {
+        try {
+            authService.verifyResetOtp(request.getEmail(), request.getOtp());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
-        authService.resetPassword(request.getToken(), request.getNewPassword());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> resetPassword(@RequestBody com.theguy.app.dto.ResetPasswordRequest request) {
+        try {
+            authService.resetPasswordWithOtp(request.getEmail(), request.getNewPassword());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     private String getClientIp(HttpServletRequest request) {

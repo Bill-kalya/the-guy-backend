@@ -30,6 +30,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Paym
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\BaseEntity.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\JobRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\auth\RateLimitInterceptor.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\SearchProviderItem.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\config\SecurityConfig.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\AdminActionService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\OtpPurpose.java
@@ -52,11 +53,14 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\Res
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ProviderService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\auth\JwtUtil.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Dispute.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\SearchProvidersResponse.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\ProviderLocation.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\DisputeRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\NearbyProviderDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\UserDto.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\SearchController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\MpesaRequest.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\SearchService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\config\RedisConfig.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\JobRequestDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\RiskScore.java

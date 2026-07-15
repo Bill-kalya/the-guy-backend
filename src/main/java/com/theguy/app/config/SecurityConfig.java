@@ -1,10 +1,11 @@
 package com.theguy.app.config;
 
-import com.theguy.app.auth.JwtAuthenticationEntryPoint;
-import com.theguy.app.auth.JwtFilter;
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -23,9 +24,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.List;
-import org.springframework.http.HttpMethod;
+import com.theguy.app.auth.JwtAuthenticationEntryPoint;
+import com.theguy.app.auth.JwtFilter;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -56,6 +58,8 @@ public class SecurityConfig {
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/error")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/providers/nearby")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/api/search/**")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/api/search/**")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/jobs/**")).authenticated()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/providers/**")).authenticated()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/reviews/**")).authenticated()
@@ -91,6 +95,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of(
+                "https://theguy.co.ke",
+                "https://www.theguy.co.ke",
                 "https://app.theguy.co.ke",
                 "http://localhost:*",
                 "http://127.0.0.1:*"

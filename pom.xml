@@ -20,9 +20,6 @@
     <properties>
         <java.version>17</java.version>
         <maven.compiler.release>17</maven.compiler.release>
-
-        <!-- Pin Flyway to a newer version for PostgreSQL compatibility -->
-        <flyway.version>11.2.0</flyway.version>
     </properties>
 
     <dependencies>
@@ -54,25 +51,25 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        
+
         <!-- H2 Database for development (no Docker needed) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
-        
+
         <!-- Keep PostgreSQL for production -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>${flyway.version}</version>
         </dependency>
+
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -96,7 +93,7 @@
             <version>1.18.38</version>
             <optional>true</optional>
         </dependency>
-        
+
         <!-- Load .env files into Spring Environment -->
         <dependency>
             <groupId>me.paulschwarz</groupId>

@@ -21,6 +21,15 @@ public class AuthService {
     private final OtpService otpService;
 
     @Transactional
+    public void sendVerificationOtp(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        otpService.generateAndSendOtp(email, OtpPurpose.VERIFY_EMAIL);
+        log.info("Verification OTP sent to: {}", email);
+    }
+
+    @Transactional
     public void resendVerification(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
@@ -29,7 +38,6 @@ public class AuthService {
             throw new RuntimeException("Email already verified");
         }
 
-        // Issue OTP via Redis + Resend
         otpService.resendOtp(email, OtpPurpose.VERIFY_EMAIL);
         log.info("Verification OTP resent to: {}", email);
     }

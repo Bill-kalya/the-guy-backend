@@ -19,16 +19,36 @@ public class PricingService {
     
     private final RedisTemplate<String, Object> redisTemplate;
     
-    // Base prices by category (KES)
-    private static final java.util.Map<String, Double[]> BASE_PRICES = java.util.Map.of(
-        "PLUMBING", new Double[]{500.0, 1500.0},
-        "ELECTRICAL", new Double[]{600.0, 2000.0},
-        "CLEANING", new Double[]{400.0, 1000.0},
-        "MECHANIC", new Double[]{800.0, 3000.0},
-        "DESIGN", new Double[]{2000.0, 10000.0},
-        "TUTORING", new Double[]{500.0, 1500.0},
-        "MOVING", new Double[]{1500.0, 5000.0},
-        "REPAIR", new Double[]{400.0, 1200.0}
+    // Base prices by category (KES) — all 22 categories matching the frontend
+    private static final java.util.Map<String, Double[]> BASE_PRICES = java.util.Map.ofEntries(
+        // Home & Maintenance
+        java.util.Map.entry("PLUMBING", new Double[]{500.0, 1500.0}),
+        java.util.Map.entry("ELECTRICAL", new Double[]{600.0, 2000.0}),
+        java.util.Map.entry("CARPENTER", new Double[]{700.0, 2500.0}),
+        java.util.Map.entry("MASON", new Double[]{800.0, 3000.0}),
+        java.util.Map.entry("PAINTING", new Double[]{1000.0, 4000.0}),
+
+        // Cleaning & Hygiene
+        java.util.Map.entry("MAMA FUA", new Double[]{300.0, 800.0}),
+        java.util.Map.entry("COMMERCIAL CLEANING", new Double[]{1500.0, 5000.0}),
+        java.util.Map.entry("CARPET & SOFA CLEANING", new Double[]{2000.0, 6000.0}),
+        java.util.Map.entry("PRESSURE WASHING", new Double[]{1500.0, 4000.0}),
+
+        // Outdoor & Garden
+        java.util.Map.entry("LAWN & COMPOUND MAINTENANCE", new Double[]{500.0, 2000.0}),
+        java.util.Map.entry("HEDGE & FENCE TRIMMING", new Double[]{600.0, 2500.0}),
+        java.util.Map.entry("TREE SERVICES", new Double[]{2000.0, 8000.0}),
+        java.util.Map.entry("IRRIGATION & BOREHOLE SERVICES", new Double[]{3000.0, 10000.0}),
+        java.util.Map.entry("GARDENING", new Double[]{500.0, 2000.0}),
+
+        // General Services
+        java.util.Map.entry("CLEANING", new Double[]{400.0, 1000.0}),
+        java.util.Map.entry("APPLIANCE REPAIR", new Double[]{800.0, 3000.0}),
+        java.util.Map.entry("MOVING", new Double[]{1500.0, 5000.0}),
+        java.util.Map.entry("HANDYMAN", new Double[]{500.0, 2000.0}),
+        java.util.Map.entry("TUTORING", new Double[]{500.0, 1500.0}),
+        java.util.Map.entry("PET CARE", new Double[]{400.0, 1200.0}),
+        java.util.Map.entry("HEALTH", new Double[]{1000.0, 5000.0})
     );
     
     public PricingService(RedisTemplate<String, Object> redisTemplate) {

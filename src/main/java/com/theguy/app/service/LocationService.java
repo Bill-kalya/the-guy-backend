@@ -63,12 +63,22 @@ public class LocationService {
         // Get bounding box to reduce database scan
         LocationUtils.BoundingBox bbox = LocationUtils.getBoundingBox(lat, lng, radiusMeters);
 
-        // Find nearby provider locations
-        List<ProviderLocation> locations = locationRepository.findNearbyProviders(
-            lat, lng, radiusMeters,
-            bbox.minLat, bbox.maxLat,
-            bbox.minLng, bbox.maxLng
-        );
+        // Find nearby provider locations (optionally filtered by category)
+        List<ProviderLocation> locations;
+        if (category != null && !category.isBlank()) {
+            locations = locationRepository.findNearbyProvidersByCategory(
+                lat, lng, radiusMeters,
+                bbox.minLat, bbox.maxLat,
+                bbox.minLng, bbox.maxLng,
+                category
+            );
+        } else {
+            locations = locationRepository.findNearbyProviders(
+                lat, lng, radiusMeters,
+                bbox.minLat, bbox.maxLat,
+                bbox.minLng, bbox.maxLng
+            );
+        }
 
         // Get provider details
         List<UUID> providerIds = locations.stream()

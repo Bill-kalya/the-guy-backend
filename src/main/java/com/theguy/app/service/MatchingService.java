@@ -45,7 +45,14 @@ public class MatchingService {
             .map(ProviderLocation::getProviderId)
             .collect(Collectors.toList());
         
-        List<Provider> candidates = providerRepository.findAllById(providerIds);
+        // Filter candidates by the job's service category
+        String category = job.getServiceCategory();
+        List<Provider> candidates;
+        if (category != null && !category.isBlank()) {
+            candidates = providerRepository.findByIdInAndServiceCategory(providerIds, category);
+        } else {
+            candidates = providerRepository.findAllById(providerIds);
+        }
         
         if (candidates.isEmpty()) {
             // Fallback: expand radius
@@ -57,7 +64,12 @@ public class MatchingService {
             providerIds = nearbyLocations.stream()
                 .map(ProviderLocation::getProviderId)
                 .collect(Collectors.toList());
-            candidates = providerRepository.findAllById(providerIds);
+            
+            if (category != null && !category.isBlank()) {
+                candidates = providerRepository.findByIdInAndServiceCategory(providerIds, category);
+            } else {
+                candidates = providerRepository.findAllById(providerIds);
+            }
         }
         
         // Step 2: Score and rank providers

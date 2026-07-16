@@ -49,6 +49,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/**")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/auth/**")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/public/**")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/ws/**")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/actuator/health")).permitAll()
@@ -57,7 +58,8 @@ public class SecurityConfig {
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/swagger-ui.html")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/error")).permitAll()
-                .requestMatchers(AntPathRequestMatcher.antMatcher("/api/providers/nearby")).permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/providers/nearby").permitAll()
+                .requestMatchers(HttpMethod.GET, "/providers/nearby").permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/search/**")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/search/**")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/jobs/**")).authenticated()

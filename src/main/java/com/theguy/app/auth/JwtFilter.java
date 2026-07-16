@@ -41,6 +41,7 @@ public class JwtFilter extends OncePerRequestFilter {
                                    @NonNull FilterChain chain)
             throws ServletException, IOException {
         
+        log.info("REQUEST PATH: {}", request.getRequestURI());
         final String authorizationHeader = request.getHeader("Authorization");
         
         String userId = null;
@@ -107,7 +108,8 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String path = request.getRequestURI();
-        return path.startsWith("/api/auth/") || 
+        return path.startsWith("/api/auth/") ||
+               path.startsWith("/auth/") ||
                path.startsWith("/api/public/") || 
                path.startsWith("/ws/") || 
                path.startsWith("/actuator/health") ||

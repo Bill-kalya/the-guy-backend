@@ -74,6 +74,17 @@ public class ProviderService {
             serviceRepository.save(service);
         }
         
+        // Save location if provided
+        if (dto.getLatitude() != null && dto.getLongitude() != null) {
+            ProviderLocation location = new ProviderLocation();
+            location.setProviderId(savedProvider.getId());
+            location.setLatitude(dto.getLatitude());
+            location.setLongitude(dto.getLongitude());
+            providerLocationRepository.save(location);
+            log.info("Saved initial location for provider {}: ({}, {})",
+                savedProvider.getId(), dto.getLatitude(), dto.getLongitude());
+        }
+
         log.info("Provider registered successfully with ID: {}", savedProvider.getId());
         return savedProvider;
     }

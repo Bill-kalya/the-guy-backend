@@ -20,6 +20,9 @@ public class ProviderRegistrationDTO {
     @Size(min = 1, message = "At least one service is required")
     private List<ServiceDTO> services;
     
+    private Double latitude;
+    private Double longitude;
+    
     @Data
     public static class ServiceDTO {
         @NotBlank(message = "Service category is required")

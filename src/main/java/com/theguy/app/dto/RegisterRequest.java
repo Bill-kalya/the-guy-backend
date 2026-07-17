@@ -24,4 +24,7 @@ public class RegisterRequest {
     private String password;
     
     private Role role = Role.CUSTOMER;
+    
+    private Double latitude;
+    private Double longitude;
 }

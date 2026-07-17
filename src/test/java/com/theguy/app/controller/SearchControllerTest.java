@@ -1,14 +1,16 @@
 package com.theguy.app.controller;
 
-import com.theguy.app.dto.ApiResponse;
 import com.theguy.app.dto.SearchProviderItem;
 import com.theguy.app.dto.SearchProvidersResponse;
 import com.theguy.app.service.SearchService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -20,8 +22,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(SearchController.class)
+@SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test")
 class SearchControllerTest {
 
     @Autowired
@@ -29,6 +32,14 @@ class SearchControllerTest {
 
     @MockBean
     private SearchService searchService;
+
+    @MockBean
+    @SuppressWarnings("unused")
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @MockBean
+    @SuppressWarnings("unused")
+    private StringRedisTemplate stringRedisTemplate;
 
     @Test
     void shouldSearchProviders() throws Exception {

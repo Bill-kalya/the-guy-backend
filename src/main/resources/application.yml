@@ -53,7 +53,7 @@ logging:
 
 resend:
   api-key: ${RESEND_API_KEY:re_5zS1LrNo_Aq82Db8K3B2Xizqzu3GobG46}
-  from-email: ${MAIL_FROM:support@theguy.co.ke}
+  from-email: ${MAIL_FROM:support@mail.theguy.co.ke}
   from-name: ${MAIL_FROM_NAME:TheGuy}
 
 management:

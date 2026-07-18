@@ -25,7 +25,7 @@ public class ResendEmailService {
     @Value("${resend.api-key:}")
     private String resendApiKey;
 
-    @Value("${resend.from-email:no-reply@theguy.co.ke}")
+    @Value("${resend.from-email:no-reply@mail.theguy.co.ke}")
     private String fromEmail;
 
     @Value("${resend.from-name:TheGuy}")

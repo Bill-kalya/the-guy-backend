@@ -12,6 +12,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -41,6 +42,8 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                         log.debug("WebSocket authenticated for user: {}", userId);
                         return message;
                     }
+                } catch (UsernameNotFoundException e) {
+                    log.warn("WebSocket auth failed — user no longer exists: {}", e.getMessage());
                 } catch (Exception e) {
                     log.warn("WebSocket authentication failed: {}", e.getMessage());
                 }

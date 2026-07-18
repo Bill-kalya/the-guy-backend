@@ -117,20 +117,25 @@ public class AuthController {
         
         User savedUser = userRepository.save(user);
 
+        boolean otpSent = true;
         try {
             authService.sendVerificationOtp(savedUser.getEmail());
         } catch (Exception e) {
-            log.warn("Failed to send verification OTP: {}", e.getMessage());
+            log.error("Failed to send verification OTP for {}: {}", savedUser.getEmail(), e.getMessage());
+            otpSent = false;
         }
 
-        log.info("User registered: {} (verification OTP sent)", savedUser.getEmail());
+        log.info("User registered: {} (otpSent={})", savedUser.getEmail(), otpSent);
 
         Map<String, Object> body = new HashMap<>();
         body.put("email", savedUser.getEmail());
-        body.put("message", "Registration successful. Please verify your email.");
+        body.put("otpSent", otpSent);
+        body.put("message", otpSent
+            ? "Registration successful. Please verify your email."
+            : "Registration successful. We couldn't send a verification code — please tap Resend.");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
-            "Registration successful. Please verify your email.", body));
+            body.get("message").toString(), body));
     }
 
     @PostMapping("/verify-email")

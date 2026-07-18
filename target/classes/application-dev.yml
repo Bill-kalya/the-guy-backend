@@ -32,6 +32,9 @@ jwt:
   secret: "dev-secret-key-for-testing-only-32chars!!"
   expiration: 86400000
 
+otp:
+  hash-secret: "dev-otp-secret-only-not-for-production"
+
 server:
   port: 8080
 

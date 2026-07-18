@@ -42,6 +42,9 @@ jwt:
   expiration: ${JWT_EXPIRATION:86400000}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
+otp:
+  hash-secret: ${OTP_HASH_SECRET}
+
 logging:
   level:
     com.theguy.app: ${LOG_LEVEL:INFO}

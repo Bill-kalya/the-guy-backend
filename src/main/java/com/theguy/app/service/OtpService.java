@@ -24,7 +24,7 @@ public class OtpService {
     private final StringRedisTemplate redisTemplate;
     private final ResendEmailService resendEmailService;
 
-    @Value("${otp.hash-secret:default-otp-secret}")
+    @Value("${otp.hash-secret}")
     private String otpHashSecret;
 
     private static final Duration OTP_TTL = Duration.ofMinutes(5);

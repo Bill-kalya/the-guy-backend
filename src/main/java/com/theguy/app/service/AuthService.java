@@ -65,7 +65,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void verifyEmailOtp(String email, String otp) {
+    public User verifyEmailOtp(String email, String otp) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
@@ -76,9 +76,10 @@ public class AuthService {
         otpService.verifyOtp(email, otp, OtpPurpose.VERIFY_EMAIL);
 
         user.setVerified(true);
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
         log.info("Email verified for user: {}", email);
+        return savedUser;
     }
 
     @Transactional

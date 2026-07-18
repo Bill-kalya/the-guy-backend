@@ -63,16 +63,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(webSocketAuthInterceptor);
         registration.taskExecutor()
-                    .corePoolSize(4)
-                    .maxPoolSize(10)
+                    .corePoolSize(2)
+                    .maxPoolSize(5)
                     .keepAliveSeconds(60);
     }
 
     @Override
     public void configureClientOutboundChannel(ChannelRegistration registration) {
         registration.taskExecutor()
-                    .corePoolSize(4)
-                    .maxPoolSize(10)
+                    .corePoolSize(2)
+                    .maxPoolSize(5)
                     .keepAliveSeconds(60);
     }
 }

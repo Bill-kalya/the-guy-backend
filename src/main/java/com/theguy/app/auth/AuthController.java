@@ -48,7 +48,7 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         try {
             User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
             
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -58,6 +58,11 @@ public class AuthController {
             );
             
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            if (!user.isVerified()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("EMAIL_NOT_VERIFIED"));
+            }
             
             Map<String, Object> claims = new HashMap<>();
             claims.put("role", user.getRole().name());
@@ -112,7 +117,6 @@ public class AuthController {
         
         User savedUser = userRepository.save(user);
 
-        // Generate and send OTP for email verification
         try {
             authService.sendVerificationOtp(savedUser.getEmail());
         } catch (Exception e) {
@@ -121,27 +125,37 @@ public class AuthController {
 
         log.info("User registered: {} (verification OTP sent)", savedUser.getEmail());
 
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", savedUser.getRole().name());
-        String accessToken = jwtUtil.generateToken(savedUser.getEmail(), claims);
+        Map<String, Object> body = new HashMap<>();
+        body.put("email", savedUser.getEmail());
+        body.put("message", "Registration successful. Please verify your email.");
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(AuthResponse.builder()
-            .accessToken(accessToken)
-            .tokenType("Bearer")
-            .expiresIn(86400000L)
-            .userId(savedUser.getId())
-            .role(savedUser.getRole())
-            .email(savedUser.getEmail())
-            .fullName(savedUser.getFullName())
-            .isVerified(savedUser.isVerified())
-            .build());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
+            "Registration successful. Please verify your email.", body));
     }
 
     @PostMapping("/verify-email")
     public ResponseEntity<?> verifyEmail(@Valid @RequestBody com.theguy.app.dto.VerifyOtpRequest request) {
         try {
-            authService.verifyEmailOtp(request.getEmail(), request.getOtp());
-            return ResponseEntity.ok(ApiResponse.success("Email verified successfully", null));
+            User user = authService.verifyEmailOtp(request.getEmail(), request.getOtp());
+
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("role", user.getRole().name());
+            claims.put("email", user.getEmail());
+
+            String accessToken = jwtUtil.generateToken(user.getEmail(), claims);
+            String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
+
+            return ResponseEntity.ok(AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(86400000L)
+                .userId(user.getId())
+                .role(user.getRole())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .isVerified(true)
+                .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(e.getMessage()));

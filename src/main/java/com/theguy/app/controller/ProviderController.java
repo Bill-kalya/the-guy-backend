@@ -94,26 +94,6 @@ public class ProviderController {
         return ResponseEntity.ok(ApiResponse.success("Status updated successfully", null));
     }
     
-    @PostMapping("/location")
-    @PreAuthorize("hasRole('PROVIDER')")
-    public ResponseEntity<ApiResponse<Void>> updateLocation(
-            @RequestParam @Min(-90) @Max(90) double lat,
-            @RequestParam @Min(-180) @Max(180) double lng) {
-        
-        String userId = (String) SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
-        
-        User user = userRepository.findById(UUID.fromString(userId))
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        Provider provider = providerRepository.findByUserId(user.getId())
-            .orElseThrow(() -> new RuntimeException("Provider profile not found"));
-        
-        providerService.updateLocation(provider.getId(), lat, lng);
-        
-        return ResponseEntity.ok(ApiResponse.success("Location updated successfully", null));
-    }
-    
     @GetMapping("/earnings")
     @PreAuthorize("hasRole('PROVIDER')")
     public ResponseEntity<?> earnings(Authentication auth) {

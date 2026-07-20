@@ -27,13 +27,15 @@ public class LocationService {
      * Update provider location (called by provider app)
      */
     @Transactional
-    public void updateLocation(UUID providerId, double latitude, double longitude) {
+    public void updateLocation(UUID providerId, double latitude, double longitude, Double heading, Double speed) {
         ProviderLocation location = locationRepository.findByProviderId(providerId)
             .orElse(new ProviderLocation());
 
         location.setProviderId(providerId);
         location.setLatitude(latitude);
         location.setLongitude(longitude);
+        if (heading != null) location.setHeading(heading);
+        if (speed != null) location.setSpeed(speed);
         location.setUpdatedAt(LocalDateTime.now());
 
         locationRepository.save(location);
@@ -85,7 +87,7 @@ public class LocationService {
             .map(ProviderLocation::getProviderId)
             .collect(Collectors.toList());
 
-        List<Provider> providers = providerRepository.findAllById(providerIds);
+        List<Provider> providers = providerRepository.findAllByIdWithServices(providerIds);
 
         // Map providers to response DTOs
         return providers.stream()

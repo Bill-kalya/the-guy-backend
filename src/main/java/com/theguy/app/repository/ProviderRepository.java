@@ -18,4 +18,7 @@ public interface ProviderRepository extends JpaRepository<Provider, UUID> {
 
     @Query("SELECT DISTINCT p FROM Provider p JOIN p.services s WHERE p.id IN :providerIds AND s.category = :category AND s.isActive = true")
     List<Provider> findByIdInAndServiceCategory(@Param("providerIds") List<UUID> providerIds, @Param("category") String category);
+
+    @Query("SELECT DISTINCT p FROM Provider p LEFT JOIN FETCH p.services WHERE p.id IN :providerIds")
+    List<Provider> findAllByIdWithServices(@Param("providerIds") List<UUID> providerIds);
 }

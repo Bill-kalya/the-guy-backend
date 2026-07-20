@@ -42,7 +42,9 @@ public class LocationWebSocketController {
         locationService.updateLocation(
             providerId,
             payload.getLatitude(),
-            payload.getLongitude()
+            payload.getLongitude(),
+            payload.getHeading(),
+            payload.getSpeed()
         );
 
         // Broadcast to all customers watching this provider
@@ -51,6 +53,8 @@ public class LocationWebSocketController {
         broadcast.put("providerId", providerId);
         broadcast.put("latitude", payload.getLatitude());
         broadcast.put("longitude", payload.getLongitude());
+        broadcast.put("heading", payload.getHeading());
+        broadcast.put("speed", payload.getSpeed());
         broadcast.put("timestamp", LocalDateTime.now().toString());
 
         notificationService.broadcastToTopic(
@@ -87,6 +91,8 @@ public class LocationWebSocketController {
             response.put("providerId", providerId);
             response.put("latitude", location.getLatitude());
             response.put("longitude", location.getLongitude());
+            response.put("heading", location.getHeading());
+            response.put("speed", location.getSpeed());
             response.put("timestamp", location.getUpdatedAt().toString());
 
             notificationService.sendToUser(

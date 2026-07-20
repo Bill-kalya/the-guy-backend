@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .phone(user.getPhoneNumber())
-                .role(user.getRole().name())
+                .role(user.getRole().getApiRole())
                 .isVerified(user.isVerified())
                 .createdAt(user.getCreatedAt())
                 .build();

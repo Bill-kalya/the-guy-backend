@@ -13,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -39,7 +41,9 @@ public class LocationController {
         locationService.updateLocation(
             providerId,
             request.getLatitude(),
-            request.getLongitude()
+            request.getLongitude(),
+            request.getHeading(),
+            request.getSpeed()
         );
 
         return ResponseEntity.ok(ApiResponse.success("Location updated", null));
@@ -66,7 +70,7 @@ public class LocationController {
      * Get a specific provider's location
      */
     @GetMapping("/provider/{providerId}")
-    public ResponseEntity<ApiResponse<ProviderLocation>> getProviderLocation(
+    public ResponseEntity<?> getProviderLocation(
             @PathVariable UUID providerId) {
 
         ProviderLocation location = locationService.getProviderLocation(providerId);
@@ -74,7 +78,15 @@ public class LocationController {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(ApiResponse.success(location));
+        Map<String, Object> body = new HashMap<>();
+        body.put("providerId", location.getProviderId());
+        body.put("latitude", location.getLatitude());
+        body.put("longitude", location.getLongitude());
+        body.put("timestamp", location.getUpdatedAt() != null ? location.getUpdatedAt().toString() : null);
+        body.put("heading", location.getHeading());
+        body.put("speed", location.getSpeed());
+
+        return ResponseEntity.ok(ApiResponse.success(body));
     }
 
     @Data
@@ -84,5 +96,9 @@ public class LocationController {
 
         @Min(-180) @Max(180)
         private Double longitude;
+
+        private Double heading;
+
+        private Double speed;
     }
 }

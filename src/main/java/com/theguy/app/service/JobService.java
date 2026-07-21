@@ -331,6 +331,11 @@ public class JobService {
         return mapToResponseDTO(job);
     }
     
+    @Transactional(readOnly = true)
+    public List<Job> getJobsByCustomer(UUID customerId) {
+        return jobRepository.findByCustomerId(customerId);
+    }
+
     private JobResponseDTO mapToResponseDTO(Job job) {
         return JobResponseDTO.builder()
             .id(job.getId())

@@ -89,4 +89,25 @@ public class JobController {
         jobService.completeJob(jobId);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/stats")
+    public ResponseEntity<?> getCustomerStats(Authentication auth) {
+        String userId = (String) SecurityContextHolder.getContext()
+            .getAuthentication().getPrincipal();
+        User customer = userRepository.findById(UUID.fromString(userId))
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Job> jobs = jobService.getJobsByCustomer(customer.getId());
+        long totalJobs = jobs.size();
+        long completedJobs = jobs.stream().filter(j -> j.getStatus() == JobStatus.COMPLETED).count();
+        long activeJobs = jobs.stream().filter(j ->
+            j.getStatus() == JobStatus.IN_PROGRESS || j.getStatus() == JobStatus.ASSIGNED || j.getStatus() == JobStatus.MATCHED
+        ).count();
+
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("totalJobs", totalJobs);
+        stats.put("completedJobs", completedJobs);
+        stats.put("activeJobs", activeJobs);
+        return ResponseEntity.ok(ApiResponse.success(stats));
+    }
 }

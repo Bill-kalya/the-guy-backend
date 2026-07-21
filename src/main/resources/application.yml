@@ -71,6 +71,9 @@ management:
       show-details: when-authorized
 
 server:
+  error:
+    include-message: always
+    include-binding-errors: always
   tomcat:
     max-threads: 100
     min-spare-threads: 5

@@ -1,0 +1,1 @@
+ALTER TABLE providers ADD COLUMN version INTEGER DEFAULT 0;

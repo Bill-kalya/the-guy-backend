@@ -47,6 +47,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\SendMes
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\AuthService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\PaymentMethod.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\PricingType.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\GlobalExceptionHandler.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ProviderRegistrationDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\CategoryController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ResendEmailService.java

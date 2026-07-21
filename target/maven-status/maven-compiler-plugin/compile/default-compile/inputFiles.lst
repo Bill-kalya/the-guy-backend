@@ -84,6 +84,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\Pro
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\config\WebSocketConfig.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\TheGuyApplication.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\JobRepository.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\FileController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\AuthResponse.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\PriceEstimateDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ProviderResponseDTO.java

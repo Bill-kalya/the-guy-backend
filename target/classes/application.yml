@@ -1,4 +1,9 @@
 spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 10MB
   datasource:
     url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
     username: ${PGUSER}
@@ -76,6 +81,10 @@ api:
   url: ${API_URL:https://api.theguy.co.ke}
 ws:
   url: ${WS_URL:wss://api.theguy.co.ke}
+
+# File uploads
+file:
+  upload-dir: ${UPLOAD_DIR:uploads}
 
 # Allowed websocket origins (used by Spring STOMP endpoint)
 websocket:

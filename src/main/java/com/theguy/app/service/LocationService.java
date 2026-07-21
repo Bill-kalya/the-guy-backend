@@ -98,6 +98,10 @@ public class LocationService {
                     .orElse(null);
 
                 if (location == null) return null;
+                if (provider.getUser() == null) {
+                    log.warn("Provider {} has no linked user, skipping", provider.getId());
+                    return null;
+                }
 
                 double distance = LocationUtils.calculateDistance(
                     lat, lng,
@@ -116,17 +120,18 @@ public class LocationService {
                 return NearbyProviderDTO.builder()
                     .id(provider.getId())
                     .name(provider.getUser().getFullName())
-                    .category(provider.getServices().stream()
-                        .findFirst()
-                        .map(s -> s.getCategory())
-                        .orElse("Unknown"))
+                    .category(provider.getServices() != null && !provider.getServices().isEmpty()
+                        ? provider.getServices().get(0).getCategory()
+                        : "Unknown")
                     .latitude(location.getLatitude())
                     .longitude(location.getLongitude())
                     .distance(distance)
                     .serviceQualityScore(qualityScore)
                     .priceEstimate(calculatePriceEstimate(provider))
                     .isOnline(provider.isOnline())
-                    .verificationLevel(provider.getVerificationLevel().name())
+                    .verificationLevel(provider.getVerificationLevel() != null
+                        ? provider.getVerificationLevel().name()
+                        : "BASIC")
                     .rating(provider.getRatingAvg())
                     .jobsCompleted(provider.getJobsCompleted())
                     .etaMinutes(etaMinutes)

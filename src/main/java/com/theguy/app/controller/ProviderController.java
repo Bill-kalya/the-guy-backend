@@ -70,11 +70,15 @@ public class ProviderController {
             @RequestParam(defaultValue = "5000") @Min(100) @Max(50000) double radius,
             @RequestParam(required = false) String category) {
         
-        List<NearbyProviderDTO> providers = locationService.findNearbyProviders(
-            lat, lng, radius, category
-        );
-        
-        return ResponseEntity.ok(ApiResponse.success(providers));
+        try {
+            List<NearbyProviderDTO> providers = locationService.findNearbyProviders(
+                lat, lng, radius, category
+            );
+            return ResponseEntity.ok(ApiResponse.success(providers));
+        } catch (Exception e) {
+            log.error("Error finding nearby providers at ({}, {}) radius={}: {}", lat, lng, radius, e.getMessage(), e);
+            throw e;
+        }
     }
     
     @PatchMapping("/status")

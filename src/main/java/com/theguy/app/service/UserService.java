@@ -9,4 +9,5 @@ public interface UserService {
     UserDto getProfile(String email);
     UserDto updateProfile(String email, UpdateProfileRequest request);
     UserDto getUser(UUID id);
+    void changePassword(String email, String currentPassword, String newPassword);
 }

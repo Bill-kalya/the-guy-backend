@@ -26,6 +26,8 @@ public class User extends BaseEntity {
     
     private String verificationToken;
 
+    private String avatarUrl;
+
     public String getPasswordHash() {
         return passwordHash;
     }

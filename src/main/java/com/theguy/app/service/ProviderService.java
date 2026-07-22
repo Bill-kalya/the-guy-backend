@@ -139,16 +139,26 @@ public class ProviderService {
         Long completedJobs = jobRepository.countCompletedByProvider(provider.getId());
         Double totalEarnings = jobRepository.getTotalEarningsByProvider(provider.getId());
 
-        // Get wallet balances
-        var wallet = walletService.getWallet(provider.getId());
+        double pendingBalance = 0.0;
+        double availableBalance = 0.0;
+        String currency = "KES";
+
+        try {
+            var wallet = walletService.getWallet(provider.getId());
+            pendingBalance = wallet.getPendingBalance();
+            availableBalance = wallet.getAvailableBalance();
+            currency = wallet.getCurrency();
+        } catch (Exception e) {
+            log.warn("Could not load wallet for provider {}: {}", provider.getId(), e.getMessage());
+        }
 
         Map<String, Object> earnings = new HashMap<>();
         earnings.put("totalEarnings", totalEarnings != null ? totalEarnings : 0.0);
         earnings.put("jobsCompleted", completedJobs != null ? completedJobs : 0);
-        earnings.put("pendingBalance", wallet.getPendingBalance());
-        earnings.put("availableBalance", wallet.getAvailableBalance());
-        earnings.put("totalBalance", wallet.getPendingBalance() + wallet.getAvailableBalance());
-        earnings.put("currency", wallet.getCurrency());
+        earnings.put("pendingBalance", pendingBalance);
+        earnings.put("availableBalance", availableBalance);
+        earnings.put("totalBalance", pendingBalance + availableBalance);
+        earnings.put("currency", currency);
 
         return earnings;
     }

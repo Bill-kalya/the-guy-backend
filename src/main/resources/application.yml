@@ -36,6 +36,8 @@ spring:
       port: ${REDISPORT}
       password: ${REDIS_PASSWORD}
       timeout: 2000ms
+      repositories:
+        enabled: false
       lettuce:
         pool:
           max-active: 8

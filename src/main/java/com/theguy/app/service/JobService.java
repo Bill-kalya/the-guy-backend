@@ -10,6 +10,7 @@ import com.theguy.app.enums.Urgency;
 import com.theguy.app.repository.JobRepository;
 import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.UserRepository;
+import com.theguy.app.service.PriceSnapshotService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class JobService {
     private final MatchingService matchingService;
     private final NotificationService notificationService;
     private final LocationService locationService;
+    private final PriceSnapshotService priceSnapshotService;
     
     @Transactional
     public Job requestJob(JobRequestDTO dto, User customer) {
@@ -66,6 +68,13 @@ public class JobService {
         
         Job savedJob = jobRepository.save(job);
         log.info("Job created with ID: {}", savedJob.getId());
+        
+        // Capture price snapshot at booking time
+        double platformFee = savedJob.getFinalPrice() != null ? savedJob.getFinalPrice() * 0.10 : 0.0;
+        double taxAmount = (savedJob.getFinalPrice() != null ? savedJob.getFinalPrice() : 0.0) * 0.16;
+        priceSnapshotService.capture(savedJob,
+            savedJob.getFinalPrice() != null ? savedJob.getFinalPrice() : 0.0,
+            platformFee, taxAmount, 0.0);
         
         // Start matching process asynchronously
         matchingService.startMatching(savedJob);

@@ -2,6 +2,7 @@ package com.theguy.app.entity;
 
 import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
@@ -67,6 +68,7 @@ public class Review extends BaseEntity {
     private String comment;
     
     @Column(nullable = false)
+    @Default
     private Integer helpfulCount = 0;
     
     @PrePersist

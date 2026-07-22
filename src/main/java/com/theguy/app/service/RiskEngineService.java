@@ -7,6 +7,7 @@ import com.theguy.app.entity.Review;
 import com.theguy.app.entity.Dispute;
 import com.theguy.app.entity.Job;
 import com.theguy.app.enums.VerificationLevel;
+import com.theguy.app.enums.DisputeStatus;
 import com.theguy.app.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +105,7 @@ public class RiskEngineService {
         else if (rating < 3.0) score += 10;
         else if (rating < 4.0) score += 5;
 
-        long disputeCount = disputeRepository.countByStatus(Dispute.DisputeStatus.OPEN) ;
+        long disputeCount = disputeRepository.countByStatus(DisputeStatus.OPEN);
         // note: simplified; without providerId-specific dispute query in repo
         factors.put("disputeCount", disputeCount);
         if (disputeCount > 10) score += 20;
@@ -128,7 +129,7 @@ public class RiskEngineService {
         User user = userRepository.findById(customerId).orElse(null);
         if (user == null) return 100;
 
-        long openDisputes = disputeRepository.countByOpenStatus();
+        long openDisputes = disputeRepository.countByStatus(DisputeStatus.OPEN);
         factors.put("openDisputes", openDisputes);
         int score = 0;
         if (openDisputes > 5) score += 25;

@@ -96,3 +96,12 @@ websocket:
     - ${WEBSOCKET_ALLOWED_ORIGIN_2:http://localhost:3000}
   sockjs:
     client-library-url: ${WEBSOCKET_SOCKJS_CLIENT_URL:https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js}
+
+# M-Pesa (Safaricom Daraja)
+mpesa:
+  consumer-key: ${MPESA_CONSUMER_KEY:}
+  consumer-secret: ${MPESA_CONSUMER_SECRET:}
+  short-code: ${MPESA_SHORT_CODE:}
+  pass-key: ${MPESA_PASS_KEY:}
+  callback-url: ${MPESA_CALLBACK_URL:https://api.theguy.co.ke/api/payments/webhooks/mpesa}
+  environment: ${MPESA_ENVIRONMENT:sandbox}

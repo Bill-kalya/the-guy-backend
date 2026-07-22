@@ -11,6 +11,7 @@ import com.theguy.app.repository.ProviderLocationRepository;
 import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.ServiceRepository;
 import com.theguy.app.repository.UserRepository;
+import com.theguy.app.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class ProviderService {
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
     private final ProviderStatisticsService providerStatisticsService;
+    private final WalletService walletService;
     
     @Transactional
     public Provider registerProvider(User user, ProviderRegistrationDTO dto) {
@@ -135,14 +137,18 @@ public class ProviderService {
                 .orElseThrow(() -> new RuntimeException("Provider profile not found"));
 
         Long completedJobs = jobRepository.countCompletedByProvider(provider.getId());
-        // Calculate total earnings from completed jobs
         Double totalEarnings = jobRepository.getTotalEarningsByProvider(provider.getId());
+
+        // Get wallet balances
+        var wallet = walletService.getWallet(provider.getId());
 
         Map<String, Object> earnings = new HashMap<>();
         earnings.put("totalEarnings", totalEarnings != null ? totalEarnings : 0.0);
         earnings.put("jobsCompleted", completedJobs != null ? completedJobs : 0);
-        earnings.put("pendingPayouts", 0.0); // Placeholder for future payout logic
-        earnings.put("availableBalance", totalEarnings != null ? totalEarnings : 0.0);
+        earnings.put("pendingBalance", wallet.getPendingBalance());
+        earnings.put("availableBalance", wallet.getAvailableBalance());
+        earnings.put("totalBalance", wallet.getPendingBalance() + wallet.getAvailableBalance());
+        earnings.put("currency", wallet.getCurrency());
 
         return earnings;
     }

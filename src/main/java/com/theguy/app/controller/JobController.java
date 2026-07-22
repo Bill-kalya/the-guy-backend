@@ -101,7 +101,7 @@ public class JobController {
         long totalJobs = jobs.size();
         long completedJobs = jobs.stream().filter(j -> j.getStatus() == JobStatus.COMPLETED).count();
         long activeJobs = jobs.stream().filter(j ->
-            j.getStatus() == JobStatus.IN_PROGRESS || j.getStatus() == JobStatus.ASSIGNED || j.getStatus() == JobStatus.MATCHED
+            j.getStatus() == JobStatus.IN_PROGRESS || j.getStatus() == JobStatus.ASSIGNED || j.getStatus() == JobStatus.MATCHING
         ).count();
 
         java.util.Map<String, Object> stats = new java.util.HashMap<>();

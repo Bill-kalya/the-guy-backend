@@ -1,97 +1,57 @@
 package com.theguy.app.entity;
 
+import com.theguy.app.enums.DisputeStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.List;
 
 @Entity
-@Table(
-        name = "disputes",
-        indexes = {
-                @Index(name = "idx_disputes_job", columnList = "job_id"),
-                @Index(name = "idx_disputes_status", columnList = "status"),
-                @Index(name = "idx_disputes_assignee", columnList = "assignee_id")
-        }
-)
+@Table(name = "disputes")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class Dispute extends BaseEntity {
 
-    @Column(name = "job_id", nullable = false)
-    private UUID jobId;
+    @OneToOne
+    @JoinColumn(name = "job_id", nullable = false)
+    private Job job;
 
-    @Column(nullable = false)
-    private UUID customerId;
-
-    @Column(nullable = false)
-    private UUID providerId;
-
-    @Column(nullable = false)
-    private String title;
+    @ManyToOne
+    @JoinColumn(name = "opened_by_id", nullable = false)
+    private User openedBy;
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String description;
+    private String reason;
 
+    @ElementCollection
+    @CollectionTable(name = "dispute_evidence_urls", joinColumns = @JoinColumn(name = "dispute_id"))
+    @Column(name = "evidence_url")
+    private List<String> evidenceUrls;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private DisputeCategory category;
+    @Builder.Default
+    private DisputeStatus status = DisputeStatus.OPEN;
 
-    @Column(name = "status", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private DisputeStatus status;
+    @Column
+    private Double refundAmount;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private DisputePriority priority;
-
-    @Column(name = "assignee_id")
-    private UUID assigneeId;
-
-    private UUID resolutionId;
+    @Column
+    private Double providerPenalty;
 
     @Column(columnDefinition = "TEXT")
     private String resolutionNotes;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    @Column
     private LocalDateTime resolvedAt;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        if (status == null) status = DisputeStatus.OPEN;
-        if (priority == null) priority = DisputePriority.MEDIUM;
-    }
-
-    public enum DisputeCategory {
-        SERVICE_QUALITY,
-        PAYMENT,
-        CANCELLATION,
-        NO_SHOW,
-        DAMAGE,
-        HARASSMENT,
-        FRAUD,
-        OTHER
-    }
-
-    public enum DisputeStatus {
-        OPEN,
-        IN_REVIEW,
-        PENDING_EVIDENCE,
-        AWAITING_RESPONSE,
-        RESOLVED,
-        CLOSED,
-        APPEALED
-    }
-
-    public enum DisputePriority {
-        LOW,
-        MEDIUM,
-        HIGH,
-        URGENT
-    }
+    @Version
+    private Integer version;
 }
-

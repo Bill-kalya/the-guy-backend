@@ -3,10 +3,19 @@ package com.theguy.app.service;
 import com.theguy.app.dto.MpesaRequest;
 import com.theguy.app.entity.Payment;
 import com.theguy.app.entity.User;
+import com.theguy.app.enums.AccountCode;
+import com.theguy.app.enums.AuditActorType;
+import com.theguy.app.enums.FinancialAction;
 import com.theguy.app.enums.PaymentMethod;
 import com.theguy.app.enums.PaymentStatus;
+import com.theguy.app.enums.WalletReferenceType;
 import com.theguy.app.repository.PaymentRepository;
 import com.theguy.app.repository.UserRepository;
+import com.theguy.app.service.WalletService;
+import com.theguy.app.service.LedgerService;
+import com.theguy.app.service.FinancialAuditLogService;
+import com.theguy.app.repository.JobRepository;
+import com.theguy.app.repository.ProviderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +35,11 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
+    private final WalletService walletService;
+    private final LedgerService ledgerService;
+    private final FinancialAuditLogService auditLogService;
+    private final com.theguy.app.repository.JobRepository jobRepository;
+    private final com.theguy.app.repository.ProviderRepository providerRepository;
 
     @Transactional
     public Map<String, Object> initiate(MpesaRequest request) {
@@ -81,5 +95,57 @@ public class PaymentService {
         payments.addAll(paymentRepository.findByProviderId(user.getId()));
 
         return payments;
+    }
+
+    @Transactional
+    public Map<String, Object> handlePaymentSuccess(String checkoutRequestId, String mpesaReceiptNumber) {
+        Payment payment = paymentRepository.findByCheckoutRequestId(checkoutRequestId)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+
+        payment.setStatus(PaymentStatus.HELD);
+        payment.setMpesaReceiptNumber(mpesaReceiptNumber);
+        payment.setPaidAt(java.time.LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        // Get the job and provider
+        var job = jobRepository.findById(payment.getJobId()).orElse(null);
+        if (job == null || job.getProvider() == null) {
+            log.error("Payment success but no job/provider found for payment: {}", payment.getId());
+            return Map.of("status", "SUCCESS", "message", "Payment recorded but job not yet assigned");
+        }
+
+        UUID providerId = job.getProvider().getId();
+        double totalAmount = payment.getAmount().doubleValue();
+        double platformFee = totalAmount * 0.10;
+        double providerAmount = totalAmount - platformFee;
+
+        // 1. Credit provider pending wallet
+        walletService.creditPending(providerId, providerAmount, WalletReferenceType.JOB,
+                job.getId(), "Payment received for job");
+
+        // 2. Record double-entry ledger
+        ledgerService.recordDoubleEntry(
+                AccountCode.ESCROW, AccountCode.PLATFORM_REVENUE,
+                platformFee, "KES", "PAYMENT", payment.getId(),
+                "Platform fee (10%) for job");
+        ledgerService.recordDoubleEntry(
+                AccountCode.ESCROW, AccountCode.PROVIDER_EARNINGS,
+                providerAmount, "KES", "PAYMENT", payment.getId(),
+                "Provider earnings for job");
+
+        // 3. Tax record (16% VAT on platform fee)
+        double taxAmount = platformFee * 0.16;
+        ledgerService.record(
+                AccountCode.TAX_LIABILITY, com.theguy.app.enums.EntryType.CREDIT,
+                taxAmount, "KES", "PAYMENT", payment.getId(), "VAT on platform fee");
+
+        // 4. Audit log
+        auditLogService.log(null, AuditActorType.SYSTEM, FinancialAction.PAYMENT_RECEIVED,
+                "Payment", payment.getId(),
+                String.format("Payment of KES %.2f received via %s", totalAmount, payment.getPaymentMethod()));
+
+        log.info("Payment success processed: paymentId={}, jobId={}, provider={}", payment.getId(), job.getId(), providerId);
+
+        return Map.of("status", "SUCCESS", "paymentId", payment.getId(), "jobId", job.getId());
     }
 }

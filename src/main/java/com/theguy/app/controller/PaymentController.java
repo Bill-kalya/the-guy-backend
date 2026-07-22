@@ -7,8 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+@Deprecated
 @RestController
-@RequestMapping("/api/payments")
+@RequestMapping("/api/payments/legacy")
 @RequiredArgsConstructor
 public class PaymentController {
 

@@ -22,6 +22,7 @@ com\theguy\app\entity\LedgerEntry.class
 com\theguy\app\controller\PaymentGatewayController.class
 com\theguy\app\dto\admin\ProviderSummaryDTO$ProviderSummaryDTOBuilder.class
 com\theguy\app\dto\admin\RiskOverviewDTO$RiskOverviewDTOBuilder.class
+com\theguy\app\entity\VerificationDocument.class
 com\theguy\app\dto\admin\PendingPayoutDTO.class
 com\theguy\app\service\AdminUserService.class
 com\theguy\app\entity\BookingPriceSnapshot.class
@@ -31,6 +32,7 @@ com\theguy\app\controller\GlobalExceptionHandler$1.class
 com\theguy\app\dto\admin\FinanceSummaryDTO.class
 com\theguy\app\dto\admin\ProviderFinancialsDTO$ProviderFinancialsDTOBuilder.class
 com\theguy\app\payment\mpesa\MpesaTransaction.class
+com\theguy\app\entity\PortfolioImage.class
 com\theguy\app\entity\TaxRecord.class
 com\theguy\app\service\DisputeService.class
 com\theguy\app\dto\admin\ProviderListItemDTO$ProviderListItemDTOBuilder.class
@@ -61,6 +63,8 @@ com\theguy\app\payment\mpesa\MpesaPaymentProvider.class
 com\theguy\app\payment\mpesa\MpesaTransaction$MpesaTransactionBuilder.class
 com\theguy\app\dto\admin\RiskOverviewDTO.class
 com\theguy\app\enums\ErrorCode.class
+com\theguy\app\dto\ProviderRegistrationDTO$VerificationDocDTO.class
+com\theguy\app\enums\VerificationDocumentType.class
 com\theguy\app\service\WalletService.class
 com\theguy\app\service\PayoutService.class
 com\theguy\app\enums\FinancialAction.class
@@ -78,6 +82,7 @@ com\theguy\app\dto\StructuredErrorResponse.class
 com\theguy\app\payment\mpesa\MpesaTransactionRepository.class
 com\theguy\app\controller\DisputeController$RejectDisputeRequest.class
 com\theguy\app\enums\EntryType.class
+com\theguy\app\entity\VerificationDocument$VerificationDocumentStatus.class
 com\theguy\app\enums\AccountCode.class
 com\theguy\app\repository\BookingPriceSnapshotRepository.class
 com\theguy\app\entity\TaxRecord$TaxRecordBuilder.class

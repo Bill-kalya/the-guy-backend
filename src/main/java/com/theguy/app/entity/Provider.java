@@ -17,6 +17,7 @@ public class Provider extends BaseEntity {
     
     private String bio;
     private String profileImageUrl;
+    private String categoryId;
     
     @Enumerated(EnumType.STRING)
     private VerificationLevel verificationLevel;
@@ -33,7 +34,13 @@ public class Provider extends BaseEntity {
     private double dynamicPriceMultiplier;
 
     @OneToMany(mappedBy = "provider", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<com.theguy.app.entity.Service> services;
+    private List<com.theguy.app.entity.Service> services = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "provider", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PortfolioImage> portfolioImages = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "provider", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<VerificationDocument> verificationDocuments = new java.util.ArrayList<>();
     
     @Version
     private Integer version;

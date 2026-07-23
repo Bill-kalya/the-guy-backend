@@ -6,7 +6,6 @@ import com.theguy.app.entity.Provider;
 import com.theguy.app.entity.ProviderLocation;
 import com.theguy.app.repository.ProviderLocationRepository;
 import com.theguy.app.repository.ProviderRepository;
-import com.theguy.app.repository.ServiceRepository;
 import com.theguy.app.utils.LocationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +25,14 @@ public class SearchService {
 
     private final ProviderLocationRepository providerLocationRepository;
     private final ProviderRepository providerRepository;
-    private final ServiceRepository serviceRepository;
+
+    private static final List<String> KNOWN_CATEGORIES = List.of(
+        "Plumbing", "Electrical", "Carpenter", "Mason", "Painting",
+        "Mama Fua", "Commercial Cleaning", "Carpet & Sofa Cleaning", "Pressure Washing",
+        "Lawn & Compound Maintenance", "Hedge & Fence Trimming", "Tree Services",
+        "Irrigation & Borehole Services", "Gardening", "Cleaning", "Appliance Repair",
+        "Moving", "Handyman", "Tutoring", "Pet Care", "Health"
+    );
 
     @Transactional(readOnly = true)
     public SearchProvidersResponse searchProviders(
@@ -63,8 +69,8 @@ public class SearchService {
         List<Provider> providers = providerRepository.findAllById(providerIds);
 
         List<SearchProviderItem> ranked = providers.stream()
-            .filter(provider -> provider.getServices() != null && provider.getServices().stream().anyMatch(service ->
-                categories.contains(normalizeQuery(service.getCategory()))))
+            .filter(provider -> provider.getCategoryId() != null
+                && categories.contains(normalizeQuery(provider.getCategoryId())))
             .map(provider -> {
                 ProviderLocation location = locations.stream()
                     .filter(item -> item.getProviderId().equals(provider.getId()))
@@ -129,7 +135,7 @@ public class SearchService {
             return List.of();
         }
 
-        return serviceRepository.findAllCategories().stream()
+        return KNOWN_CATEGORIES.stream()
             .filter(category -> normalizeQuery(category).startsWith(normalizedQuery))
             .map(this::toDisplayName)
             .sorted()
@@ -143,7 +149,7 @@ public class SearchService {
         }
 
         String normalized = normalizeQuery(query);
-        return serviceRepository.findAllCategories().stream()
+        return KNOWN_CATEGORIES.stream()
             .filter(category -> normalizeQuery(category).equals(normalized))
             .collect(Collectors.toList());
     }

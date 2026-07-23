@@ -1,11 +1,8 @@
 package com.theguy.app.dto;
 
-import com.theguy.app.enums.PricingType;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -14,25 +11,26 @@ public class ProviderRegistrationDTO {
     @Size(max = 500, message = "Bio cannot exceed 500 characters")
     private String bio;
     
+    @NotBlank(message = "Service category is required")
+    private String categoryId;
+    
     private String profileImageUrl;
     
-    @NotNull(message = "At least one service is required")
-    @Size(min = 1, message = "At least one service is required")
-    private List<ServiceDTO> services;
+    @Size(min = 3, max = 10, message = "3-10 portfolio photos required")
+    private List<String> portfolioImageUrls;
+    
+    @Size(min = 1, message = "At least one verification document required")
+    private List<VerificationDocDTO> verificationDocuments;
     
     private Double latitude;
     private Double longitude;
     
     @Data
-    public static class ServiceDTO {
-        @NotBlank(message = "Service category is required")
-        private String category;
+    public static class VerificationDocDTO {
+        @NotBlank(message = "Document type is required")
+        private String documentType;
         
-        @NotBlank(message = "Service title is required")
-        private String title;
-        
-        private String description;
-        private PricingType pricingType;
-        private BigDecimal basePrice;
+        @NotBlank(message = "Document URL is required")
+        private String imageUrl;
     }
 }

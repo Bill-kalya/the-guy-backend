@@ -41,6 +41,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\Audit
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\FinancialAuditLog.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\EntryType.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\VerifyOtpRequest.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\VerificationDocumentType.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\payment\mpesa\MpesaPaymentProvider.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\Urgency.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\ChatController.java
@@ -75,6 +76,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\P
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\PaymentMethod.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\PricingType.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\payment\PaymentProvider.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\VerificationDocument.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\GlobalExceptionHandler.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ProviderRegistrationDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\BookingPriceSnapshot.java
@@ -85,6 +87,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\U
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\payment\PaymentStatusResponse.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ProviderService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\auth\JwtUtil.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\PortfolioImage.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\ProviderSummaryDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Dispute.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\DisputeStatus.java

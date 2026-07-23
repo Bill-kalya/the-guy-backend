@@ -49,7 +49,7 @@ public class MatchingService {
         String category = job.getServiceCategory();
         List<Provider> candidates;
         if (category != null && !category.isBlank()) {
-            candidates = providerRepository.findByIdInAndServiceCategory(providerIds, category);
+            candidates = providerRepository.findByIdInAndCategoryId(providerIds, category);
         } else {
             candidates = providerRepository.findAllById(providerIds);
         }
@@ -66,7 +66,7 @@ public class MatchingService {
                 .collect(Collectors.toList());
             
             if (category != null && !category.isBlank()) {
-                candidates = providerRepository.findByIdInAndServiceCategory(providerIds, category);
+                candidates = providerRepository.findByIdInAndCategoryId(providerIds, category);
             } else {
                 candidates = providerRepository.findAllById(providerIds);
             }

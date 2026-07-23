@@ -15,6 +15,7 @@ public class ProviderResponseDTO {
     private String email;
     private String bio;
     private String profileImageUrl;
+    private String categoryId;
     private String verificationLevel;
     private Double ratingAvg;
     private Integer totalReviews;
@@ -23,6 +24,7 @@ public class ProviderResponseDTO {
     private Double responseRate;
     private Double repeatClientsPercentage;
     private Boolean isOnline;
+    private List<String> portfolioImageUrls;
     private List<ServiceDTO> services;
     
     // SQS fields

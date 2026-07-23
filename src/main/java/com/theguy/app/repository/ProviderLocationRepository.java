@@ -16,10 +16,6 @@ public interface ProviderLocationRepository extends JpaRepository<ProviderLocati
 
     Optional<ProviderLocation> findByProviderId(UUID providerId);
 
-    /**
-     * Find nearby providers using bounding box + haversine distance calculation
-     * This is faster than using PostGIS and works on any database
-     */
     @Query(value = """
         SELECT pl.*
         FROM provider_locations pl
@@ -63,17 +59,13 @@ public interface ProviderLocationRepository extends JpaRepository<ProviderLocati
         @Param("maxLng") double maxLng
     );
 
-    /**
-     * Find nearby providers filtered by service category
-     */
     @Query(value = """
-        SELECT DISTINCT pl.*
+        SELECT pl.*
         FROM provider_locations pl
         INNER JOIN providers p ON p.id = pl.provider_id
-        INNER JOIN services s ON s.provider_id = p.id AND s.is_active = true
         WHERE
             p.is_online = true
-            AND s.category = :category
+            AND p.category_id = :category
             AND pl.latitude BETWEEN :minLat AND :maxLat
             AND pl.longitude BETWEEN :minLng AND :maxLng
             AND (

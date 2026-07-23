@@ -23,9 +23,6 @@ public class LocationService {
     private final ProviderLocationRepository locationRepository;
     private final ProviderRepository providerRepository;
 
-    /**
-     * Update provider location (called by provider app)
-     */
     @Transactional
     public void updateLocation(UUID providerId, double latitude, double longitude, Double heading, Double speed) {
         ProviderLocation location = locationRepository.findByProviderId(providerId)
@@ -40,7 +37,6 @@ public class LocationService {
 
         locationRepository.save(location);
 
-        // Update provider's online status if they're sending location
         providerRepository.findById(providerId).ifPresent(provider -> {
             if (!provider.isOnline()) {
                 provider.setOnline(true);
@@ -52,9 +48,6 @@ public class LocationService {
         log.debug("Updated location for provider: {} at ({}, {})", providerId, latitude, longitude);
     }
 
-    /**
-     * Get nearby providers with distance and quality scores
-     */
     @Transactional(readOnly = true)
     public List<NearbyProviderDTO> findNearbyProviders(
             double lat,
@@ -62,10 +55,8 @@ public class LocationService {
             double radiusMeters,
             String category) {
 
-        // Get bounding box to reduce database scan
         LocationUtils.BoundingBox bbox = LocationUtils.getBoundingBox(lat, lng, radiusMeters);
 
-        // Find nearby provider locations (optionally filtered by category)
         List<ProviderLocation> locations;
         if (category != null && !category.isBlank()) {
             locations = locationRepository.findNearbyProvidersByCategory(
@@ -85,14 +76,12 @@ public class LocationService {
         log.info("Nearby search: lat={}, lng={}, radius={}, category={}, found {} locations",
             lat, lng, radiusMeters, category, locations.size());
 
-        // Get provider details
         List<UUID> providerIds = locations.stream()
             .map(ProviderLocation::getProviderId)
             .collect(Collectors.toList());
 
-        List<Provider> providers = providerRepository.findAllByIdWithServices(providerIds);
+        List<Provider> providers = providerRepository.findAllById(providerIds);
 
-        // Map providers to response DTOs
         return providers.stream()
             .map(provider -> {
                 ProviderLocation location = locations.stream()
@@ -123,9 +112,7 @@ public class LocationService {
                 return NearbyProviderDTO.builder()
                     .id(provider.getId())
                     .name(provider.getUser().getFullName())
-                    .category(provider.getServices() != null && !provider.getServices().isEmpty()
-                        ? provider.getServices().get(0).getCategory()
-                        : "Unknown")
+                    .category(provider.getCategoryId() != null ? provider.getCategoryId() : "Unknown")
                     .latitude(location.getLatitude())
                     .longitude(location.getLongitude())
                     .distance(distance)
@@ -146,34 +133,23 @@ public class LocationService {
     }
 
     private Double calculatePriceEstimate(Provider provider) {
-        // Base estimate from provider's services
-        java.math.BigDecimal basePrice = provider.getServices().stream()
-            .findFirst()
-            .map(service -> service.getBasePrice())
-            .orElse(java.math.BigDecimal.valueOf(500.0));
+        double basePrice = 500.0;
 
-        // Apply rating multiplier
         double ratingMultiplier = 1.0;
         if (provider.getRatingAvg() >= 4.5) ratingMultiplier = 1.2;
         else if (provider.getRatingAvg() >= 4.0) ratingMultiplier = 1.0;
         else if (provider.getRatingAvg() >= 3.5) ratingMultiplier = 0.9;
         else ratingMultiplier = 0.8;
 
-        return basePrice.doubleValue() * ratingMultiplier;
+        return basePrice * ratingMultiplier;
     }
 
-    /**
-     * Get provider's current location
-     */
     @Transactional(readOnly = true)
     public ProviderLocation getProviderLocation(UUID providerId) {
         return locationRepository.findByProviderId(providerId)
             .orElse(null);
     }
 
-    /**
-     * Get all online provider locations (for WebSocket broadcast)
-     */
     @Transactional(readOnly = true)
     public List<ProviderLocation> getAllOnlineProviderLocations() {
         List<Provider> onlineProviders = providerRepository.findByIsOnlineTrue();

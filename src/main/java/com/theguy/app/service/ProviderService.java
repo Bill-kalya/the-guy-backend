@@ -53,7 +53,7 @@ public class ProviderService {
         provider.setBio(dto.getBio());
         provider.setProfileImageUrl(dto.getProfileImageUrl());
         provider.setVerificationLevel(VerificationLevel.BASIC);
-        provider.setOnline(false);
+        provider.setOnline(true);
         provider.setDynamicPriceMultiplier(1.0);
         provider.setResponseRate(1.0);
         

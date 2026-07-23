@@ -82,6 +82,9 @@ public class LocationService {
             );
         }
 
+        log.info("Nearby search: lat={}, lng={}, radius={}, category={}, found {} locations",
+            lat, lng, radiusMeters, category, locations.size());
+
         // Get provider details
         List<UUID> providerIds = locations.stream()
             .map(ProviderLocation::getProviderId)

@@ -30,21 +30,25 @@ public interface ProviderLocationRepository extends JpaRepository<ProviderLocati
             AND pl.longitude BETWEEN :minLng AND :maxLng
             AND (
                 6371000 * acos(
-                    cos(radians(:lat))
-                    * cos(radians(pl.latitude))
-                    * cos(radians(pl.longitude) - radians(:lng))
-                    + sin(radians(:lat))
-                    * sin(radians(pl.latitude))
+                    GREATEST(-1, LEAST(1,
+                        cos(radians(:lat))
+                        * cos(radians(pl.latitude))
+                        * cos(radians(pl.longitude) - radians(:lng))
+                        + sin(radians(:lat))
+                        * sin(radians(pl.latitude))
+                    ))
                 )
             ) <= :radius
         ORDER BY
             (
                 6371000 * acos(
-                    cos(radians(:lat))
-                    * cos(radians(pl.latitude))
-                    * cos(radians(pl.longitude) - radians(:lng))
-                    + sin(radians(:lat))
-                    * sin(radians(pl.latitude))
+                    GREATEST(-1, LEAST(1,
+                        cos(radians(:lat))
+                        * cos(radians(pl.latitude))
+                        * cos(radians(pl.longitude) - radians(:lng))
+                        + sin(radians(:lat))
+                        * sin(radians(pl.latitude))
+                    ))
                 )
             ) ASC
         LIMIT 50
@@ -74,21 +78,25 @@ public interface ProviderLocationRepository extends JpaRepository<ProviderLocati
             AND pl.longitude BETWEEN :minLng AND :maxLng
             AND (
                 6371000 * acos(
-                    cos(radians(:lat))
-                    * cos(radians(pl.latitude))
-                    * cos(radians(pl.longitude) - radians(:lng))
-                    + sin(radians(:lat))
-                    * sin(radians(pl.latitude))
+                    GREATEST(-1, LEAST(1,
+                        cos(radians(:lat))
+                        * cos(radians(pl.latitude))
+                        * cos(radians(pl.longitude) - radians(:lng))
+                        + sin(radians(:lat))
+                        * sin(radians(pl.latitude))
+                    ))
                 )
             ) <= :radius
         ORDER BY
             (
                 6371000 * acos(
-                    cos(radians(:lat))
-                    * cos(radians(pl.latitude))
-                    * cos(radians(pl.longitude) - radians(:lng))
-                    + sin(radians(:lat))
-                    * sin(radians(pl.latitude))
+                    GREATEST(-1, LEAST(1,
+                        cos(radians(:lat))
+                        * cos(radians(pl.latitude))
+                        * cos(radians(pl.longitude) - radians(:lng))
+                        + sin(radians(:lat))
+                        * sin(radians(pl.latitude))
+                    ))
                 )
             ) ASC
         LIMIT 50

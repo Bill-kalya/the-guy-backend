@@ -6,6 +6,8 @@ import com.theguy.app.dto.LoginRequest;
 import com.theguy.app.dto.RegisterRequest;
 import com.theguy.app.dto.AuthResponse;
 import com.theguy.app.dto.ResetPasswordRequest;
+import com.theguy.app.dto.StructuredErrorResponse;
+import com.theguy.app.enums.ErrorCode;
 import com.theguy.app.service.AuthService;
 import com.theguy.app.entity.User;
 import com.theguy.app.enums.Role;
@@ -87,17 +89,37 @@ public class AuthController {
             log.warn("Invalid login attempt for email: {}", request.getEmail());
             rateLimitInterceptor.recordFailedAttempt(getClientIp(httpRequest));
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Invalid email or password"));
+                .body(StructuredErrorResponse.builder()
+                    .success(false)
+                    .errorCode(ErrorCode.INVALID_CREDENTIALS.getCode())
+                    .message(ErrorCode.INVALID_CREDENTIALS.getMessage())
+                    .timestamp(java.time.LocalDateTime.now().toString())
+                    .build());
         } catch (LockedException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Account is locked"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(StructuredErrorResponse.builder()
+                    .success(false)
+                    .errorCode(ErrorCode.ACCOUNT_LOCKED.getCode())
+                    .message(ErrorCode.ACCOUNT_LOCKED.getMessage())
+                    .timestamp(java.time.LocalDateTime.now().toString())
+                    .build());
         } catch (DisabledException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Account is disabled"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(StructuredErrorResponse.builder()
+                    .success(false)
+                    .errorCode(ErrorCode.ACCOUNT_SUSPENDED.getCode())
+                    .message(ErrorCode.ACCOUNT_SUSPENDED.getMessage())
+                    .timestamp(java.time.LocalDateTime.now().toString())
+                    .build());
         } catch (Exception e) {
             log.error("Login error for email: {}", request.getEmail(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Authentication failed"));
+                .body(StructuredErrorResponse.builder()
+                    .success(false)
+                    .errorCode(ErrorCode.SERVER_ERROR.getCode())
+                    .message(ErrorCode.SERVER_ERROR.getMessage())
+                    .timestamp(java.time.LocalDateTime.now().toString())
+                    .build());
         }
     }
 
@@ -105,7 +127,12 @@ public class AuthController {
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error("Email already registered"));
+                .body(StructuredErrorResponse.builder()
+                    .success(false)
+                    .errorCode(ErrorCode.EMAIL_EXISTS.getCode())
+                    .message(ErrorCode.EMAIL_EXISTS.getMessage())
+                    .timestamp(java.time.LocalDateTime.now().toString())
+                    .build());
         }
         
         User user = new User();

@@ -18,6 +18,7 @@ com\theguy\app\dto\admin\ProviderPerformanceDTO$ProviderPerformanceDTOBuilder.cl
 com\theguy\app\service\AdminProviderService.class
 com\theguy\app\dto\admin\RevenueTrendDTO.class
 com\theguy\app\repository\PaymentRecordRepository.class
+com\theguy\app\dto\ProviderResponseDTO$PortfolioImageDTO$PortfolioImageDTOBuilder.class
 com\theguy\app\entity\LedgerEntry.class
 com\theguy\app\controller\PaymentGatewayController.class
 com\theguy\app\dto\admin\ProviderSummaryDTO$ProviderSummaryDTOBuilder.class
@@ -31,9 +32,11 @@ com\theguy\app\payment\RefundResponse$RefundResponseBuilder.class
 com\theguy\app\controller\GlobalExceptionHandler$1.class
 com\theguy\app\dto\admin\FinanceSummaryDTO.class
 com\theguy\app\dto\admin\ProviderFinancialsDTO$ProviderFinancialsDTOBuilder.class
+com\theguy\app\repository\VerificationDocumentRepository.class
 com\theguy\app\payment\mpesa\MpesaTransaction.class
 com\theguy\app\entity\PortfolioImage.class
 com\theguy\app\entity\TaxRecord.class
+com\theguy\app\dto\ProviderResponseDTO$PortfolioImageDTO.class
 com\theguy\app\service\DisputeService.class
 com\theguy\app\dto\admin\ProviderListItemDTO$ProviderListItemDTOBuilder.class
 com\theguy\app\dto\admin\UserSummaryDTO$UserSummaryDTOBuilder.class
@@ -51,6 +54,7 @@ com\theguy\app\dto\admin\UserListItemDTO$UserListItemDTOBuilder.class
 com\theguy\app\payment\RefundResponse.class
 com\theguy\app\repository\WalletRepository.class
 com\theguy\app\dto\admin\PendingPayoutDTO$PendingPayoutDTOBuilder.class
+com\theguy\app\repository\PortfolioImageRepository.class
 com\theguy\app\enums\PayoutStatus.class
 com\theguy\app\payment\PaymentGatewayService.class
 com\theguy\app\controller\FileController.class
@@ -74,8 +78,10 @@ com\theguy\app\payment\PaymentProvider.class
 com\theguy\app\dto\admin\ProviderListItemDTO.class
 com\theguy\app\dto\admin\ProviderPerformanceDTO.class
 com\theguy\app\repository\TaxRecordRepository.class
+com\theguy\app\service\ProviderProfileCompletionService.class
 com\theguy\app\entity\Payout$PayoutBuilder.class
 com\theguy\app\service\AdminFinanceService.class
+com\theguy\app\entity\PortfolioImage$ModerationStatus.class
 com\theguy\app\service\SearchService$1.class
 com\theguy\app\payment\PaymentStatusResponse$PaymentStatusResponseBuilder.class
 com\theguy\app\dto\StructuredErrorResponse.class
@@ -83,6 +89,7 @@ com\theguy\app\payment\mpesa\MpesaTransactionRepository.class
 com\theguy\app\controller\DisputeController$RejectDisputeRequest.class
 com\theguy\app\enums\EntryType.class
 com\theguy\app\entity\VerificationDocument$VerificationDocumentStatus.class
+com\theguy\app\dto\ProviderRegistrationDTO$PortfolioImageDTO.class
 com\theguy\app\enums\AccountCode.class
 com\theguy\app\repository\BookingPriceSnapshotRepository.class
 com\theguy\app\entity\TaxRecord$TaxRecordBuilder.class

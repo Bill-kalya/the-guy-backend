@@ -26,6 +26,9 @@ public class VerificationDocument extends BaseEntity {
     @Column(nullable = false)
     private String imageUrl;
 
+    @Column(name = "public_id")
+    private String publicId;
+
     @Enumerated(EnumType.STRING)
     private VerificationDocumentStatus status = VerificationDocumentStatus.PENDING;
 
@@ -36,6 +39,6 @@ public class VerificationDocument extends BaseEntity {
     private UUID reviewedBy;
 
     public enum VerificationDocumentStatus {
-        PENDING, APPROVED, REJECTED
+        PENDING, APPROVED, REJECTED, DELETED
     }
 }

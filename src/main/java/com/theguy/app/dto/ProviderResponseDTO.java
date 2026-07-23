@@ -24,13 +24,22 @@ public class ProviderResponseDTO {
     private Double responseRate;
     private Double repeatClientsPercentage;
     private Boolean isOnline;
-    private List<String> portfolioImageUrls;
+    private List<PortfolioImageDTO> portfolioImages;
     private List<ServiceDTO> services;
     
     // SQS fields
     private Double serviceQualityScore;
     private Integer reviewCount;
     private ScoreBreakdown breakdown;
+    
+    @Data
+    @Builder
+    public static class PortfolioImageDTO {
+        private UUID id;
+        private String imageUrl;
+        private String publicId;
+        private Integer sortOrder;
+    }
     
     @Data
     @Builder

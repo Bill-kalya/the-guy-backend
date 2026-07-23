@@ -1,6 +1,7 @@
 package com.theguy.app.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import java.util.List;
@@ -15,9 +16,10 @@ public class ProviderRegistrationDTO {
     private String categoryId;
     
     private String profileImageUrl;
+    private String profileImagePublicId;
     
     @Size(min = 3, max = 10, message = "3-10 portfolio photos required")
-    private List<String> portfolioImageUrls;
+    private List<PortfolioImageDTO> portfolioImages;
     
     @Size(min = 1, message = "At least one verification document required")
     private List<VerificationDocDTO> verificationDocuments;
@@ -26,11 +28,23 @@ public class ProviderRegistrationDTO {
     private Double longitude;
     
     @Data
+    public static class PortfolioImageDTO {
+        @NotBlank(message = "Image URL is required")
+        private String imageUrl;
+        
+        @NotBlank(message = "Public ID is required")
+        private String publicId;
+    }
+    
+    @Data
     public static class VerificationDocDTO {
         @NotBlank(message = "Document type is required")
         private String documentType;
         
         @NotBlank(message = "Document URL is required")
         private String imageUrl;
+        
+        @NotBlank(message = "Public ID is required")
+        private String publicId;
     }
 }

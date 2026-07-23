@@ -59,11 +59,13 @@ public class ProviderService {
         Provider savedProvider = providerRepository.save(provider);
         
         // Portfolio images
-        if (dto.getPortfolioImageUrls() != null) {
-            for (int i = 0; i < dto.getPortfolioImageUrls().size(); i++) {
+        if (dto.getPortfolioImages() != null) {
+            for (int i = 0; i < dto.getPortfolioImages().size(); i++) {
+                var imgDto = dto.getPortfolioImages().get(i);
                 PortfolioImage img = new PortfolioImage();
                 img.setProvider(savedProvider);
-                img.setImageUrl(dto.getPortfolioImageUrls().get(i));
+                img.setImageUrl(imgDto.getImageUrl());
+                img.setPublicId(imgDto.getPublicId());
                 img.setSortOrder(i);
                 img.setIsActive(true);
                 savedProvider.getPortfolioImages().add(img);
@@ -77,6 +79,7 @@ public class ProviderService {
                 doc.setProvider(savedProvider);
                 doc.setDocumentType(VerificationDocumentType.valueOf(docDto.getDocumentType()));
                 doc.setImageUrl(docDto.getImageUrl());
+                doc.setPublicId(docDto.getPublicId());
                 doc.setStatus(VerificationDocument.VerificationDocumentStatus.PENDING);
                 savedProvider.getVerificationDocuments().add(doc);
             }
@@ -197,15 +200,22 @@ public class ProviderService {
                 .build();
         }
         
-        var portfolioUrls = provider.getPortfolioImages() != null
+        var portfolioDtos = provider.getPortfolioImages() != null
             ? provider.getPortfolioImages().stream()
-                .filter(img -> img.getIsActive() != null && img.getIsActive())
+                .filter(img -> img.getIsActive() != null && img.getIsActive()
+                    && img.getModerationStatus() != null
+                    && img.getModerationStatus() == com.theguy.app.entity.PortfolioImage.ModerationStatus.APPROVED)
                 .sorted((a, b) -> Integer.compare(
                     a.getSortOrder() != null ? a.getSortOrder() : 0,
                     b.getSortOrder() != null ? b.getSortOrder() : 0))
-                .map(PortfolioImage::getImageUrl)
+                .map(img -> ProviderResponseDTO.PortfolioImageDTO.builder()
+                    .id(img.getId())
+                    .imageUrl(img.getImageUrl())
+                    .publicId(img.getPublicId())
+                    .sortOrder(img.getSortOrder())
+                    .build())
                 .collect(Collectors.toList())
-            : java.util.List.<String>of();
+            : java.util.List.<ProviderResponseDTO.PortfolioImageDTO>of();
         
         return ProviderResponseDTO.builder()
             .id(provider.getId())
@@ -222,7 +232,7 @@ public class ProviderService {
             .responseRate(provider.getResponseRate())
             .repeatClientsPercentage(provider.getRepeatClientsPercentage())
             .isOnline(provider.isOnline())
-            .portfolioImageUrls(portfolioUrls)
+            .portfolioImages(portfolioDtos)
             .serviceQualityScore(sqs)
             .reviewCount(reviewCount)
             .breakdown(breakdown)

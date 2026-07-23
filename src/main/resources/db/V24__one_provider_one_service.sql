@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS portfolio_images (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     provider_id UUID NOT NULL REFERENCES providers(id) ON DELETE CASCADE,
     image_url VARCHAR(500) NOT NULL,
+    public_id VARCHAR(255),
     sort_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS verification_documents (
     provider_id UUID NOT NULL REFERENCES providers(id) ON DELETE CASCADE,
     document_type VARCHAR(50) NOT NULL,
     image_url VARCHAR(500) NOT NULL,
+    public_id VARCHAR(255),
     status VARCHAR(20) DEFAULT 'PENDING',
     rejection_reason TEXT,
     reviewed_at TIMESTAMP,

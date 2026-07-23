@@ -25,6 +25,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\Structu
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\PaymentStatus.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\WalletEntryType.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ChangePasswordRequest.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ProviderProfileCompletionService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Service.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\CategoryService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\AcceptJobDTO.java
@@ -100,6 +101,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\NearbyP
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\UserDto.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\SearchController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\UserDetailDTO.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\VerificationDocumentRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\MpesaRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\DisputeController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\SearchService.java
@@ -130,6 +132,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\Registe
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\MessageDto.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\payment\mpesa\MpesaTransactionRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Payout.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\PortfolioImageRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\ProviderController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\PaymentRecord.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\OtpService.java

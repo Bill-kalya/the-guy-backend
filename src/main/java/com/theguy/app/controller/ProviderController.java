@@ -10,6 +10,7 @@ import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.UserRepository;
 import com.theguy.app.service.LocationService;
 import com.theguy.app.service.ProviderService;
+import com.theguy.app.service.ProviderProfileCompletionService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -36,6 +37,7 @@ public class ProviderController {
     private final ProviderRepository providerRepository;
     private final UserRepository userRepository;
     private final LocationService locationService;
+    private final ProviderProfileCompletionService profileCompletionService;
     
     @PostMapping("/register")
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -118,5 +120,21 @@ public class ProviderController {
         
         ProviderResponseDTO response = providerService.mapToResponseDTO(provider);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/me/completion")
+    @PreAuthorize("hasRole('PROVIDER')")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getProfileCompletion() {
+        String userId = (String) SecurityContextHolder.getContext()
+            .getAuthentication().getPrincipal();
+        
+        User user = userRepository.findById(UUID.fromString(userId))
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Provider provider = providerRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+        
+        java.util.Map<String, Object> completion = profileCompletionService.calculateCompletion(provider);
+        return ResponseEntity.ok(ApiResponse.success(completion));
     }
 }

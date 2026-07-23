@@ -20,8 +20,19 @@ public class PortfolioImage extends BaseEntity {
     @Column(nullable = false)
     private String imageUrl;
 
+    @Column(name = "public_id")
+    private String publicId;
+
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "moderation_status")
+    private ModerationStatus moderationStatus = ModerationStatus.PENDING_REVIEW;
+
     private Boolean isActive = true;
+
+    public enum ModerationStatus {
+        PENDING_REVIEW, APPROVED, REJECTED
+    }
 }

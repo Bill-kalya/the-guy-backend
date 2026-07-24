@@ -67,10 +67,19 @@ public class PerformanceService {
         ProviderPerformance perf = performanceRepository.findById(providerId)
                 .orElseGet(() -> recalculate(providerId));
 
+        Optional<ProviderPerformance> previousOpt = getPreviousPerformance(providerId);
+
         Map<String, String> trend = new HashMap<>();
-        trend.put("acceptanceRate", "+2%");
-        trend.put("completionRate", "0%");
-        trend.put("avgResponseTime", "-15s");
+        if (previousOpt.isPresent()) {
+            ProviderPerformance prev = previousOpt.get();
+            trend.put("acceptanceRate", formatTrend(perf.getAcceptanceRate(), prev.getAcceptanceRate(), "%"));
+            trend.put("completionRate", formatTrend(perf.getCompletionRate(), prev.getCompletionRate(), "%"));
+            trend.put("avgResponseTime", prev.getAvgResponseTime() != null ? perf.getAvgResponseTime() : "No prior data");
+        } else {
+            trend.put("acceptanceRate", "No prior data");
+            trend.put("completionRate", "No prior data");
+            trend.put("avgResponseTime", "No prior data");
+        }
 
         return PerformanceDTO.builder()
                 .acceptanceRate(perf.getAcceptanceRate())
@@ -81,6 +90,18 @@ public class PerformanceService {
                 .ranking(perf.getRanking())
                 .trend(trend)
                 .build();
+    }
+
+    private Optional<ProviderPerformance> getPreviousPerformance(UUID providerId) {
+        return performanceRepository.findById(providerId)
+                .filter(p -> p.getCalculatedAt() != null && p.getCalculatedAt().isBefore(LocalDateTime.now().minusHours(1)));
+    }
+
+    private String formatTrend(Double current, Double previous, String unit) {
+        if (current == null || previous == null || previous == 0) return "No prior data";
+        double diff = current - previous;
+        String sign = diff >= 0 ? "+" : "";
+        return sign + String.format("%.1f%s", diff, unit);
     }
 
     private String calculateRanking(double completionRate, Optional<ProviderStatistics> statsOpt) {

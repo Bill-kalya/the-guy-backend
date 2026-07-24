@@ -170,6 +170,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\MpesaRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\SearchService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\FieldError.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\DashboardService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\config\RedisConfig.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\AdminTrustSafetyController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\JobRequestDTO.java
@@ -182,6 +183,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\User
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\FinancialAuditLogService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\LocationController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\PerformanceDTO.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\DashboardSummaryDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\RegisterRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Payout.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\ProviderController.java

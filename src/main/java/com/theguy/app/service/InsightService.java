@@ -98,11 +98,27 @@ public class InsightService {
                         .build())
                 .collect(Collectors.toList());
 
+        String trend = computeTrend(providerId);
+
         return InsightDTO.builder()
                 .strengths(strengths)
                 .improvements(improvements)
-                .trend("Your SQS has been consistent over the last 30 days")
+                .trend(trend)
                 .build();
+    }
+
+    private String computeTrend(UUID providerId) {
+        Optional<ProviderStatistics> statsOpt = providerStatisticsRepository.findById(providerId);
+        if (statsOpt.isEmpty()) return "No review data available";
+
+        ProviderStatistics stats = statsOpt.get();
+        if (stats.getReviewCount() == 0) return "No review data available";
+
+        double sqs = stats.getSqs();
+        if (sqs >= 90) return "Your SQS is excellent and among the top providers";
+        if (sqs >= 80) return "Your SQS is strong with room for minor improvements";
+        if (sqs >= 70) return "Your SQS is decent — focus on weak categories to improve";
+        return "Your SQS needs attention — check improvement suggestions below";
     }
 
     private String generateStrengthMessage(String category, double score) {

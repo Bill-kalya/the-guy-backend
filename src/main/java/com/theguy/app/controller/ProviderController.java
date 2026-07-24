@@ -38,6 +38,7 @@ public class ProviderController {
     private final ReputationService reputationService;
     private final InsightService insightService;
     private final WalletService walletService;
+    private final DashboardService dashboardService;
     
     @PostMapping("/register")
     @PreAuthorize("hasRole('PROVIDER')")
@@ -189,5 +190,13 @@ public class ProviderController {
         walletData.put("pendingBalance", wallet.getPendingBalance());
         walletData.put("currency", wallet.getCurrency());
         return ResponseEntity.ok(ApiResponse.success(walletData));
+    }
+
+    @GetMapping("/me/dashboard")
+    @PreAuthorize("hasRole('PROVIDER')")
+    public ResponseEntity<ApiResponse<DashboardSummaryDTO>> getMyDashboard() {
+        Provider provider = getCurrentProvider();
+        DashboardSummaryDTO summary = dashboardService.getDashboardSummary(provider.getId());
+        return ResponseEntity.ok(ApiResponse.success(summary));
     }
 }

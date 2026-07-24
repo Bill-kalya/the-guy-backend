@@ -40,7 +40,7 @@ public class ProviderController {
     private final ProviderProfileCompletionService profileCompletionService;
     
     @PostMapping("/register")
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasRole('PROVIDER')")
     public ResponseEntity<ApiResponse<ProviderResponseDTO>> registerAsProvider(
             @Valid @RequestBody ProviderRegistrationDTO dto) {
         

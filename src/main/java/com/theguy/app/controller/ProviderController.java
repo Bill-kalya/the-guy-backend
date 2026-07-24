@@ -1,16 +1,11 @@
 package com.theguy.app.controller;
 
-import com.theguy.app.dto.ApiResponse;
-import com.theguy.app.dto.NearbyProviderDTO;
-import com.theguy.app.dto.ProviderRegistrationDTO;
-import com.theguy.app.dto.ProviderResponseDTO;
+import com.theguy.app.dto.*;
 import com.theguy.app.entity.Provider;
 import com.theguy.app.entity.User;
 import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.UserRepository;
-import com.theguy.app.service.LocationService;
-import com.theguy.app.service.ProviderService;
-import com.theguy.app.service.ProviderProfileCompletionService;
+import com.theguy.app.service.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -38,6 +33,11 @@ public class ProviderController {
     private final UserRepository userRepository;
     private final LocationService locationService;
     private final ProviderProfileCompletionService profileCompletionService;
+    private final PerformanceService performanceService;
+    private final GoalService goalService;
+    private final ReputationService reputationService;
+    private final InsightService insightService;
+    private final WalletService walletService;
     
     @PostMapping("/register")
     @PreAuthorize("hasRole('PROVIDER')")
@@ -136,5 +136,58 @@ public class ProviderController {
         
         java.util.Map<String, Object> completion = profileCompletionService.calculateCompletion(provider);
         return ResponseEntity.ok(ApiResponse.success(completion));
+    }
+
+    private Provider getCurrentProvider() {
+        String userId = (String) SecurityContextHolder.getContext()
+            .getAuthentication().getPrincipal();
+        User user = userRepository.findById(UUID.fromString(userId))
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        return providerRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+    }
+
+    @GetMapping("/me/performance")
+    @PreAuthorize("hasRole('PROVIDER')")
+    public ResponseEntity<ApiResponse<PerformanceDTO>> getMyPerformance() {
+        Provider provider = getCurrentProvider();
+        PerformanceDTO performance = performanceService.getPerformanceDTO(provider.getId());
+        return ResponseEntity.ok(ApiResponse.success(performance));
+    }
+
+    @GetMapping("/me/goals")
+    @PreAuthorize("hasRole('PROVIDER')")
+    public ResponseEntity<ApiResponse<GoalDTO>> getMyGoals() {
+        Provider provider = getCurrentProvider();
+        GoalDTO goals = goalService.getGoalDTO(provider.getId(), 0.0);
+        return ResponseEntity.ok(ApiResponse.success(goals));
+    }
+
+    @GetMapping("/me/reputation")
+    @PreAuthorize("hasRole('PROVIDER')")
+    public ResponseEntity<ApiResponse<ReputationDTO>> getMyReputation() {
+        Provider provider = getCurrentProvider();
+        ReputationDTO reputation = reputationService.getReputationDTO(provider.getId());
+        return ResponseEntity.ok(ApiResponse.success(reputation));
+    }
+
+    @GetMapping("/me/insights")
+    @PreAuthorize("hasRole('PROVIDER')")
+    public ResponseEntity<ApiResponse<InsightDTO>> getMyInsights() {
+        Provider provider = getCurrentProvider();
+        InsightDTO insights = insightService.getInsights(provider.getId());
+        return ResponseEntity.ok(ApiResponse.success(insights));
+    }
+
+    @GetMapping("/me/wallet")
+    @PreAuthorize("hasRole('PROVIDER')")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getMyWallet() {
+        Provider provider = getCurrentProvider();
+        var wallet = walletService.getWallet(provider.getId());
+        java.util.Map<String, Object> walletData = new java.util.HashMap<>();
+        walletData.put("availableBalance", wallet.getAvailableBalance());
+        walletData.put("pendingBalance", wallet.getPendingBalance());
+        walletData.put("currency", wallet.getCurrency());
+        return ResponseEntity.ok(ApiResponse.success(walletData));
     }
 }

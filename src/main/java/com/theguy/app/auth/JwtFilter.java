@@ -64,6 +64,18 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
 
                 userId = jwtUtil.extractUserId(jwt);
+                
+                // Check for impersonation token — load impersonated user instead
+                try {
+                    io.jsonwebtoken.Claims claims = jwtUtil.getClaimsFromToken(jwt);
+                    String impersonatorId = claims.get("impersonator_id", String.class);
+                    if (impersonatorId != null) {
+                        request.setAttribute("impersonatorId", impersonatorId);
+                        log.debug("Impersonation token detected. Impersonator: {}, Target: {}", impersonatorId, userId);
+                    }
+                } catch (Exception ignored) {
+                    // Not an impersonation token, proceed normally
+                }
             } catch (ExpiredJwtException e) {
                 log.warn("JWT token expired");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

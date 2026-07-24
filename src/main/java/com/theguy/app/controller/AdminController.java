@@ -4,6 +4,8 @@ import com.theguy.app.dto.*;
 import com.theguy.app.dto.admin.*;
 import com.theguy.app.entity.*;
 import com.theguy.app.service.*;
+import com.theguy.app.auth.JwtUtil;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,6 +29,7 @@ public class AdminController {
     private final AdminFinanceService adminFinanceService;
     private final AdminUserService adminUserService;
     private final AdminProviderService adminProviderService;
+    private final ImpersonationService impersonationService;
 
     @GetMapping("/trust-safety/risk-scores")
     public ResponseEntity<ApiResponse<Page<RiskScoreDTO>>> getRiskScores(
@@ -59,7 +62,38 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    @GetMapping("/audit-logs")
+    // ── Impersonation ──────────────────────────────────────
+
+    @PostMapping("/impersonate")
+    public ResponseEntity<ApiResponse<ImpersonationTokenDTO>> impersonate(
+            @RequestBody ImpersonationRequest request,
+            HttpServletRequest servletRequest
+    ) {
+        Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String adminPrincipal;
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+            adminPrincipal = userDetails.getUsername();
+        } else {
+            adminPrincipal = principal.toString();
+        }
+
+        UUID adminId;
+        try {
+            adminId = UUID.fromString(adminPrincipal);
+        } catch (IllegalArgumentException e) {
+            // If principal is email-based, look up the user
+            adminId = java.util.UUID.fromString(adminPrincipal);
+        }
+
+        ImpersonationTokenDTO token = impersonationService.impersonate(request.getUserId(), adminId);
+
+        // Audit log
+        adminActionService.logImpersonation(adminId, request.getUserId(), servletRequest);
+
+        return ResponseEntity.ok(ApiResponse.success(token));
+    }
+
+    // ── Audit Logs ────────────────────────────────────────
     public ResponseEntity<ApiResponse<Page<AdminAction>>> getAuditLogs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,

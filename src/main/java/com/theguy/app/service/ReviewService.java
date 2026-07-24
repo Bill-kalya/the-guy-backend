@@ -1,6 +1,7 @@
 package com.theguy.app.service;
 
 import com.theguy.app.dto.ReviewDTO;
+import com.theguy.app.dto.ReviewSummaryDTO;
 import com.theguy.app.entity.Job;
 import com.theguy.app.entity.ProviderStatistics;
 import com.theguy.app.entity.Review;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -84,6 +87,40 @@ public class ReviewService {
     @Transactional
     public void markReviewHelpful(UUID reviewId) {
         reviewRepository.incrementHelpfulCount(reviewId);
+    }
+
+    @Transactional(readOnly = true)
+    public ReviewSummaryDTO getReviewSummary(UUID providerId) {
+        var statsOpt = providerStatisticsRepository.findById(providerId);
+
+        double overallSqs = 0.0;
+        long totalReviews = 0;
+        Map<String, Double> categories = new LinkedHashMap<>();
+
+        if (statsOpt.isPresent()) {
+            ProviderStatistics stats = statsOpt.get();
+            overallSqs = stats.getSqs();
+            totalReviews = stats.getReviewCount();
+            categories.put("professionalism", stats.getProfessionalismScore());
+            categories.put("communication", stats.getCommunicationScore());
+            categories.put("timeliness", stats.getTimelinessScore());
+            categories.put("workQuality", stats.getWorkQualityScore());
+            categories.put("reliability", stats.getReliabilityScore());
+            categories.put("courtesy", stats.getCourtesyScore());
+            categories.put("valueForMoney", stats.getValueScore());
+        } else {
+            Double avgSqs = reviewRepository.getAverageSqsByProviderId(providerId);
+            Long count = reviewRepository.getReviewCountByProviderId(providerId);
+            overallSqs = avgSqs != null ? avgSqs : 0.0;
+            totalReviews = count != null ? count : 0L;
+        }
+
+        return ReviewSummaryDTO.builder()
+                .overallSqs(overallSqs)
+                .totalReviews(totalReviews)
+                .categories(categories)
+                .recentTrend(totalReviews > 0 ? "stable" : "no_data")
+                .build();
     }
     
     public record RatingSummary(double averageRating, long totalReviews) {}

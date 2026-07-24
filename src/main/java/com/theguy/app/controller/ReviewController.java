@@ -2,6 +2,7 @@ package com.theguy.app.controller;
 
 import com.theguy.app.dto.ApiResponse;
 import com.theguy.app.dto.ReviewDTO;
+import com.theguy.app.dto.ReviewSummaryDTO;
 import com.theguy.app.entity.Job;
 import com.theguy.app.entity.Review;
 import com.theguy.app.entity.User;
@@ -78,5 +79,11 @@ public class ReviewController {
     public ResponseEntity<ApiResponse<Void>> markHelpful(@PathVariable UUID reviewId) {
         reviewService.markReviewHelpful(reviewId);
         return ResponseEntity.ok(ApiResponse.success("Review marked as helpful", null));
+    }
+
+    @GetMapping("/provider/{providerId}/summary")
+    public ResponseEntity<ApiResponse<ReviewSummaryDTO>> getProviderReviewSummary(@PathVariable UUID providerId) {
+        ReviewSummaryDTO summary = reviewService.getReviewSummary(providerId);
+        return ResponseEntity.ok(ApiResponse.success(summary));
     }
 }

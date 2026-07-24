@@ -59,6 +59,7 @@ public class AdminAction extends BaseEntity {
             DISPUTE_RESOLVE,
             SYSTEM_CONFIG_CHANGE,
             ROLE_CHANGE,
-            FORCE_LOGOUT
+            FORCE_LOGOUT,
+            IMPERSONATE
     }
 }

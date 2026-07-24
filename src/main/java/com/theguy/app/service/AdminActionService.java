@@ -42,5 +42,20 @@ public class AdminActionService {
         AdminAction.ActionType parsed = (actionType == null || actionType.isBlank()) ? null : AdminAction.ActionType.valueOf(actionType);
         return adminActionRepository.findAuditLogs(adminId, parsed, pageable);
     }
+
+    @Transactional
+    public void logImpersonation(UUID adminId, UUID targetUserId, HttpServletRequest servletRequest) {
+        AdminAction action = new AdminAction();
+        action.setAdminId(adminId);
+        action.setActionType(AdminAction.ActionType.IMPERSONATE);
+        action.setTargetId(targetUserId.toString());
+        action.setTargetType("USER");
+        action.setDetails("Admin impersonation started");
+        action.setIpAddress(servletRequest.getRemoteAddr());
+        action.setUserAgent(servletRequest.getHeader("User-Agent"));
+        action.setDeviceId(servletRequest.getHeader("X-Device-Id"));
+        action.setMetadata(null);
+        adminActionRepository.save(action);
+    }
 }
 

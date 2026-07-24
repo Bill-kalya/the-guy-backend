@@ -4,6 +4,7 @@ com\theguy\app\repository\FinancialAuditLogRepository.class
 com\theguy\app\entity\FinancialAuditLog$FinancialAuditLogBuilder.class
 com\theguy\app\dto\admin\ProviderPerformanceDTO$ProviderPerformanceDTOBuilder.class
 com\theguy\app\entity\VerificationDocument.class
+com\theguy\app\controller\GlobalExceptionHandler$1.class
 com\theguy\app\entity\PortfolioImage.class
 com\theguy\app\entity\TaxRecord.class
 com\theguy\app\service\DisputeService.class
@@ -13,7 +14,9 @@ com\theguy\app\enums\FinancialAction.class
 com\theguy\app\dto\admin\ProviderPerformanceDTO.class
 com\theguy\app\repository\TaxRecordRepository.class
 com\theguy\app\entity\PortfolioImage$ModerationStatus.class
+com\theguy\app\service\SearchService$1.class
 com\theguy\app\entity\VerificationDocument$VerificationDocumentStatus.class
 com\theguy\app\entity\TaxRecord$TaxRecordBuilder.class
+com\theguy\app\service\OtpService$1.class
 com\theguy\app\entity\FinancialAuditLog.class
 com\theguy\app\entity\Dispute$DisputeBuilder.class

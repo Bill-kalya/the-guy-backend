@@ -31,6 +31,10 @@ public enum ErrorCode {
     PAYMENT_CANCELLED("PAYMENT_CANCELLED", "Payment was cancelled"),
     PAYMENT_TIMEOUT("PAYMENT_TIMEOUT", "Payment timed out. Please try again"),
     
+    // Google OAuth
+    GOOGLE_AUTH_FAILED("GOOGLE_AUTH_FAILED", "Google authentication failed. Please try again"),
+    INVALID_GOOGLE_TOKEN("INVALID_GOOGLE_TOKEN", "Invalid Google authentication token"),
+    
     // General
     NETWORK_ERROR("NETWORK_ERROR", "Network error. Check your connection"),
     SERVER_ERROR("SERVER_ERROR", "Something went wrong. Please try again"),

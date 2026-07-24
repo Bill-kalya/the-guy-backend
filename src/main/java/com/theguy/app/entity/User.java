@@ -1,9 +1,12 @@
 package com.theguy.app.entity;
 
+import com.theguy.app.enums.AuthProvider;
 import com.theguy.app.enums.Role;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -27,6 +30,16 @@ public class User extends BaseEntity {
     private String verificationToken;
 
     private String avatarUrl;
+
+    @Column(name = "google_id", unique = true)
+    private String googleId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider")
+    private AuthProvider authProvider;
+
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
 
     public String getPasswordHash() {
         return passwordHash;

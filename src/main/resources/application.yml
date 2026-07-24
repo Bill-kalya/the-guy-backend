@@ -99,6 +99,10 @@ cloudinary:
   api-key: ${CLOUDINARY_API_KEY:}
   api-secret: ${CLOUDINARY_API_SECRET:}
 
+# Google OAuth (for audience validation during Google Sign-In)
+google:
+  client-id: ${GOOGLE_CLIENT_ID:}
+
 # Allowed websocket origins (used by Spring STOMP endpoint)
 websocket:
   allowed-origins:

@@ -2,15 +2,13 @@ package com.theguy.app.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "provider_goals")
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class ProviderGoal extends BaseEntity {
+public class ProviderGoal {
 
     @Id
     @Column(name = "provider_id")
@@ -31,9 +29,13 @@ public class ProviderGoal extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
     @PrePersist
     @PreUpdate
     public void updateTimestamp() {
         this.updatedAt = LocalDateTime.now();
+        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
     }
 }

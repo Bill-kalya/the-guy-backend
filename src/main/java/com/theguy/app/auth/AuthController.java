@@ -5,6 +5,7 @@ import com.theguy.app.dto.EmailRequest;
 import com.theguy.app.dto.LoginRequest;
 import com.theguy.app.dto.RegisterRequest;
 import com.theguy.app.dto.AuthResponse;
+import com.theguy.app.dto.GoogleAuthRequest;
 import com.theguy.app.dto.ResetPasswordRequest;
 import com.theguy.app.dto.StructuredErrorResponse;
 import com.theguy.app.enums.ErrorCode;
@@ -163,6 +164,41 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
             body.get("message").toString(), body));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> googleAuth(@Valid @RequestBody GoogleAuthRequest request) {
+        try {
+            User user = authService.loginWithGoogle(request.getIdToken());
+
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("role", user.getRole().name());
+            claims.put("email", user.getEmail());
+
+            String accessToken = jwtUtil.generateToken(user.getEmail(), claims);
+            String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
+
+            return ResponseEntity.ok(AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(86400000L)
+                .userId(user.getId())
+                .role(user.getRole())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .isVerified(user.isVerified())
+                .build());
+        } catch (Exception e) {
+            log.error("Google auth failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(StructuredErrorResponse.builder()
+                    .success(false)
+                    .errorCode(ErrorCode.GOOGLE_AUTH_FAILED.getCode())
+                    .message(ErrorCode.GOOGLE_AUTH_FAILED.getMessage())
+                    .timestamp(java.time.LocalDateTime.now().toString())
+                    .build());
+        }
     }
 
     @PostMapping("/verify-email")

@@ -33,6 +33,8 @@ public class Provider extends BaseEntity {
     private double repeatClientsPercentage;
     private double dynamicPriceMultiplier;
 
+    private String providerStatus = "ACTIVE";
+
     @OneToMany(mappedBy = "provider", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<com.theguy.app.entity.Service> services = new java.util.ArrayList<>();
 

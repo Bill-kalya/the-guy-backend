@@ -25,6 +25,8 @@ public class ProviderLocation extends BaseEntity {
     @Column(nullable = false)
     private Double longitude;
 
+    private String city;
+
     private LocalDateTime updatedAt;
 
     private Double heading;  // Optional: direction in degrees

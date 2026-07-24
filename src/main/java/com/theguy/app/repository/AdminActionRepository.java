@@ -23,5 +23,7 @@ public interface AdminActionRepository extends JpaRepository<AdminAction, UUID> 
     );
 
     Optional<AdminAction> findFirstByAdminIdOrderByCreatedAtDesc(UUID adminId);
+
+    long countByActionType(AdminAction.ActionType actionType);
 }
 

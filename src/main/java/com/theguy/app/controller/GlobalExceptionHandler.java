@@ -17,6 +17,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import com.theguy.app.dto.StructuredErrorResponse;
 import com.theguy.app.enums.ErrorCode;
+import com.theguy.app.exception.ProviderNotFoundException;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -111,6 +112,13 @@ public class GlobalExceptionHandler {
         ErrorCode code = resolveExceptionCode(msg);
         return ResponseEntity.status(HttpStatus.CONFLICT)
             .body(buildStructuredResponse(code, null));
+    }
+
+    @ExceptionHandler(ProviderNotFoundException.class)
+    public ResponseEntity<StructuredErrorResponse> handleProviderNotFound(ProviderNotFoundException ex) {
+        log.warn("Provider not found: {}", ex.getProviderId());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(buildStructuredResponse(ErrorCode.NOT_FOUND, null));
     }
 
     @ExceptionHandler(RuntimeException.class)

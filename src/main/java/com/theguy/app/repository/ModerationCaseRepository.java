@@ -10,5 +10,9 @@ import java.util.UUID;
 public interface ModerationCaseRepository extends JpaRepository<ModerationCase, UUID> {
 
     Page<ModerationCase> findByStatus(ModerationCase.ModerationStatus status, Pageable pageable);
+
+    long countByStatus(ModerationCase.ModerationStatus status);
+
+    long countByPriority(ModerationCase.ModerationPriority priority);
 }
 

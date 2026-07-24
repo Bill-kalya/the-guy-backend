@@ -42,6 +42,7 @@ com\theguy\app\dto\admin\ProviderListItemDTO$ProviderListItemDTOBuilder.class
 com\theguy\app\dto\admin\UserSummaryDTO$UserSummaryDTOBuilder.class
 com\theguy\app\dto\admin\ProviderFinancialsDTO.class
 com\theguy\app\entity\LedgerEntry$LedgerEntryBuilder.class
+com\theguy\app\controller\AdminTrustSafetyController.class
 com\theguy\app\controller\PayoutController$PayoutRequest.class
 com\theguy\app\dto\FieldError.class
 com\theguy\app\repository\LedgerEntryRepository.class
@@ -58,6 +59,7 @@ com\theguy\app\repository\PortfolioImageRepository.class
 com\theguy\app\enums\PayoutStatus.class
 com\theguy\app\payment\PaymentGatewayService.class
 com\theguy\app\controller\FileController.class
+com\theguy\app\service\TrustSafetyService.class
 com\theguy\app\service\FinancialAuditLogService.class
 com\theguy\app\controller\WalletController.class
 com\theguy\app\dto\admin\ProviderDetailDTO.class

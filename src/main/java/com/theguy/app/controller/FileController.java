@@ -5,11 +5,12 @@ import com.theguy.app.entity.PortfolioImage;
 import com.theguy.app.entity.VerificationDocument;
 import com.theguy.app.repository.PortfolioImageRepository;
 import com.theguy.app.repository.VerificationDocumentRepository;
+import com.theguy.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -29,6 +30,7 @@ public class FileController {
 
     private final PortfolioImageRepository portfolioImageRepository;
     private final VerificationDocumentRepository verificationDocumentRepository;
+    private final UserRepository userRepository;
 
     @Value("${cloudinary.cloud-name:}")
     private String cloudName;
@@ -129,25 +131,25 @@ public class FileController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteFile(@RequestParam String publicId) {
+    public ResponseEntity<?> deleteFile(@RequestParam String publicId, Authentication authentication) {
 
         if (cloudName == null || cloudName.isBlank()) {
             return ResponseEntity.internalServerError().body(ApiResponse.error("Cloudinary not configured"));
         }
 
         // Ownership validation: verify the publicId belongs to this user
-        String principal = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal != null) {
+        String email = authentication.getName();
+        var user = userRepository.findByEmail(email).orElse(null);
+        if (user != null) {
             try {
-                UUID userId = UUID.fromString(principal);
-                boolean owns = verifyOwnership(publicId, userId);
+                boolean owns = verifyOwnership(publicId, user.getId());
                 if (!owns) {
-                    log.warn("User {} attempted to delete file they don't own: {}", userId, publicId);
+                    log.warn("User {} attempted to delete file they don't own: {}", user.getId(), publicId);
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponse.error("You don't have permission to delete this file"));
                 }
             } catch (Exception e) {
-                log.warn("Could not verify ownership for principal: {}", principal);
+                log.warn("Could not verify ownership for user: {}", email);
             }
         }
 

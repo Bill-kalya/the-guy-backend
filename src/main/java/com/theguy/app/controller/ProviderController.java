@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -43,12 +42,10 @@ public class ProviderController {
     @PostMapping("/register")
     @PreAuthorize("hasRole('PROVIDER')")
     public ResponseEntity<ApiResponse<ProviderResponseDTO>> registerAsProvider(
-            @Valid @RequestBody ProviderRegistrationDTO dto) {
+            @Valid @RequestBody ProviderRegistrationDTO dto,
+            Authentication authentication) {
         
-        String userId = (String) SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
-        
-        User user = userRepository.findById(UUID.fromString(userId))
+        User user = userRepository.findByEmail(authentication.getName())
             .orElseThrow(() -> new RuntimeException("User not found"));
         
         Provider provider = providerService.registerProvider(user, dto);
@@ -86,11 +83,8 @@ public class ProviderController {
     
     @PatchMapping("/status")
     @PreAuthorize("hasRole('PROVIDER')")
-    public ResponseEntity<ApiResponse<Void>> updateOnlineStatus(@RequestParam boolean online) {
-        String userId = (String) SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
-        
-        User user = userRepository.findById(UUID.fromString(userId))
+    public ResponseEntity<ApiResponse<Void>> updateOnlineStatus(@RequestParam boolean online, Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
             .orElseThrow(() -> new RuntimeException("User not found"));
         
         Provider provider = providerRepository.findByUserId(user.getId())
@@ -109,11 +103,8 @@ public class ProviderController {
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('PROVIDER')")
-    public ResponseEntity<ApiResponse<ProviderResponseDTO>> getMyProfile() {
-        String userId = (String) SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
-        
-        User user = userRepository.findById(UUID.fromString(userId))
+    public ResponseEntity<ApiResponse<ProviderResponseDTO>> getMyProfile(Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
             .orElseThrow(() -> new RuntimeException("User not found"));
         
         Provider provider = providerRepository.findByUserId(user.getId())
@@ -125,11 +116,8 @@ public class ProviderController {
 
     @GetMapping("/me/completion")
     @PreAuthorize("hasRole('PROVIDER')")
-    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getProfileCompletion() {
-        String userId = (String) SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
-        
-        User user = userRepository.findById(UUID.fromString(userId))
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getProfileCompletion(Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
             .orElseThrow(() -> new RuntimeException("User not found"));
         
         Provider provider = providerRepository.findByUserId(user.getId())
@@ -139,10 +127,8 @@ public class ProviderController {
         return ResponseEntity.ok(ApiResponse.success(completion));
     }
 
-    private Provider getCurrentProvider() {
-        String userId = (String) SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
-        User user = userRepository.findById(UUID.fromString(userId))
+    private Provider getCurrentProvider(Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
             .orElseThrow(() -> new RuntimeException("User not found"));
         return providerRepository.findByUserId(user.getId())
             .orElseThrow(() -> new RuntimeException("Provider profile not found"));
@@ -150,40 +136,40 @@ public class ProviderController {
 
     @GetMapping("/me/performance")
     @PreAuthorize("hasRole('PROVIDER')")
-    public ResponseEntity<ApiResponse<PerformanceDTO>> getMyPerformance() {
-        Provider provider = getCurrentProvider();
+    public ResponseEntity<ApiResponse<PerformanceDTO>> getMyPerformance(Authentication authentication) {
+        Provider provider = getCurrentProvider(authentication);
         PerformanceDTO performance = performanceService.getPerformanceDTO(provider.getId());
         return ResponseEntity.ok(ApiResponse.success(performance));
     }
 
     @GetMapping("/me/goals")
     @PreAuthorize("hasRole('PROVIDER')")
-    public ResponseEntity<ApiResponse<GoalDTO>> getMyGoals() {
-        Provider provider = getCurrentProvider();
+    public ResponseEntity<ApiResponse<GoalDTO>> getMyGoals(Authentication authentication) {
+        Provider provider = getCurrentProvider(authentication);
         GoalDTO goals = goalService.getGoalDTO(provider.getId(), 0.0);
         return ResponseEntity.ok(ApiResponse.success(goals));
     }
 
     @GetMapping("/me/reputation")
     @PreAuthorize("hasRole('PROVIDER')")
-    public ResponseEntity<ApiResponse<ReputationDTO>> getMyReputation() {
-        Provider provider = getCurrentProvider();
+    public ResponseEntity<ApiResponse<ReputationDTO>> getMyReputation(Authentication authentication) {
+        Provider provider = getCurrentProvider(authentication);
         ReputationDTO reputation = reputationService.getReputationDTO(provider.getId());
         return ResponseEntity.ok(ApiResponse.success(reputation));
     }
 
     @GetMapping("/me/insights")
     @PreAuthorize("hasRole('PROVIDER')")
-    public ResponseEntity<ApiResponse<InsightDTO>> getMyInsights() {
-        Provider provider = getCurrentProvider();
+    public ResponseEntity<ApiResponse<InsightDTO>> getMyInsights(Authentication authentication) {
+        Provider provider = getCurrentProvider(authentication);
         InsightDTO insights = insightService.getInsights(provider.getId());
         return ResponseEntity.ok(ApiResponse.success(insights));
     }
 
     @GetMapping("/me/wallet")
     @PreAuthorize("hasRole('PROVIDER')")
-    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getMyWallet() {
-        Provider provider = getCurrentProvider();
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getMyWallet(Authentication authentication) {
+        Provider provider = getCurrentProvider(authentication);
         var wallet = walletService.getWallet(provider.getId());
         java.util.Map<String, Object> walletData = new java.util.HashMap<>();
         walletData.put("availableBalance", wallet.getAvailableBalance());
@@ -194,8 +180,8 @@ public class ProviderController {
 
     @GetMapping("/me/dashboard")
     @PreAuthorize("hasRole('PROVIDER')")
-    public ResponseEntity<ApiResponse<DashboardSummaryDTO>> getMyDashboard() {
-        Provider provider = getCurrentProvider();
+    public ResponseEntity<ApiResponse<DashboardSummaryDTO>> getMyDashboard(Authentication authentication) {
+        Provider provider = getCurrentProvider(authentication);
         DashboardSummaryDTO summary = dashboardService.getDashboardSummary(provider.getId());
         return ResponseEntity.ok(ApiResponse.success(summary));
     }

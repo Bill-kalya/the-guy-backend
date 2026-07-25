@@ -18,7 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
@@ -35,11 +35,8 @@ public class ReviewController {
     
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<ApiResponse<Review>> submitReview(@Valid @RequestBody ReviewDTO dto) {
-        String userId = (String) SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
-        
-        User customer = userRepository.findById(UUID.fromString(userId))
+    public ResponseEntity<ApiResponse<Review>> submitReview(@Valid @RequestBody ReviewDTO dto, Authentication authentication) {
+        User customer = userRepository.findByEmail(authentication.getName())
             .orElseThrow(() -> new RuntimeException("User not found"));
         
         // Verify customer completed the job

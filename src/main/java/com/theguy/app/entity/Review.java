@@ -1,10 +1,8 @@
 package com.theguy.app.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
+import lombok.*;
 import lombok.Builder.Default;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -12,6 +10,8 @@ import java.util.UUID;
 @Table(name = "reviews")
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class Review extends BaseEntity {
     

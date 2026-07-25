@@ -7,12 +7,12 @@ import com.theguy.app.entity.Job;
 import com.theguy.app.entity.User;
 import com.theguy.app.enums.JobStatus;
 import com.theguy.app.repository.UserRepository;
+import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.service.JobService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
@@ -23,12 +23,11 @@ import java.util.UUID;
 public class JobController {
     private final JobService jobService;
     private final UserRepository userRepository;
+    private final ProviderRepository providerRepository;
     
     @PostMapping("/request")
-    public ResponseEntity<?> requestJob(@Valid @RequestBody JobRequestDTO dto) {
-        String userId = (String) SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
-        User customer = userRepository.findById(UUID.fromString(userId))
+    public ResponseEntity<?> requestJob(@Valid @RequestBody JobRequestDTO dto, Authentication authentication) {
+        User customer = userRepository.findByEmail(authentication.getName())
             .orElseThrow(() -> new RuntimeException("User not found"));
         
         Job job = jobService.requestJob(dto, customer);
@@ -46,10 +45,12 @@ public class JobController {
     }
     
     @PostMapping("/{jobId}/accept")
-    public ResponseEntity<?> acceptJob(@PathVariable UUID jobId) {
-        String providerId = (String) SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
-        jobService.acceptJob(jobId, UUID.fromString(providerId));
+    public ResponseEntity<?> acceptJob(@PathVariable UUID jobId, Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        var provider = providerRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+        jobService.acceptJob(jobId, provider.getId());
         return ResponseEntity.ok(ApiResponse.success("Job accepted", null));
     }
 
@@ -91,10 +92,8 @@ public class JobController {
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<?> getCustomerStats(Authentication auth) {
-        String userId = (String) SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
-        User customer = userRepository.findById(UUID.fromString(userId))
+    public ResponseEntity<?> getCustomerStats(Authentication authentication) {
+        User customer = userRepository.findByEmail(authentication.getName())
             .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<Job> jobs = jobService.getJobsByCustomer(customer.getId());

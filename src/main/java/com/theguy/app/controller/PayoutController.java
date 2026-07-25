@@ -2,13 +2,15 @@ package com.theguy.app.controller;
 
 import com.theguy.app.dto.ApiResponse;
 import com.theguy.app.entity.Payout;
+import com.theguy.app.entity.User;
+import com.theguy.app.repository.ProviderRepository;
+import com.theguy.app.repository.UserRepository;
 import com.theguy.app.service.PayoutService;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.UUID;
@@ -19,11 +21,16 @@ import java.util.UUID;
 public class PayoutController {
 
     private final PayoutService payoutService;
+    private final UserRepository userRepository;
+    private final ProviderRepository providerRepository;
 
     @PostMapping("/request")
-    public ResponseEntity<?> requestPayout(@RequestBody PayoutRequest request) {
-        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Payout payout = payoutService.requestPayout(UUID.fromString(userId), request.getAmount());
+    public ResponseEntity<?> requestPayout(@RequestBody PayoutRequest request, Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        var provider = providerRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+        Payout payout = payoutService.requestPayout(provider.getId(), request.getAmount());
         return ResponseEntity.ok(ApiResponse.success("Payout requested", Map.of(
                 "payoutId", payout.getId(),
                 "amount", payout.getAmount(),
@@ -32,9 +39,12 @@ public class PayoutController {
     }
 
     @GetMapping("/history")
-    public ResponseEntity<?> getPayoutHistory() {
-        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        var payouts = payoutService.getProviderPayouts(UUID.fromString(userId));
+    public ResponseEntity<?> getPayoutHistory(Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        var provider = providerRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+        var payouts = payoutService.getProviderPayouts(provider.getId());
         return ResponseEntity.ok(ApiResponse.success(payouts));
     }
 

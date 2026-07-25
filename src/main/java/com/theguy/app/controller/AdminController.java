@@ -3,6 +3,7 @@ package com.theguy.app.controller;
 import com.theguy.app.dto.*;
 import com.theguy.app.dto.admin.*;
 import com.theguy.app.entity.*;
+import com.theguy.app.repository.UserRepository;
 import com.theguy.app.service.*;
 import com.theguy.app.auth.JwtUtil;
 import io.jsonwebtoken.Claims;
@@ -30,6 +31,7 @@ public class AdminController {
     private final AdminUserService adminUserService;
     private final AdminProviderService adminProviderService;
     private final ImpersonationService impersonationService;
+    private final UserRepository userRepository;
 
     @GetMapping("/trust-safety/risk-scores")
     public ResponseEntity<ApiResponse<Page<RiskScoreDTO>>> getRiskScores(
@@ -81,8 +83,10 @@ public class AdminController {
         try {
             adminId = UUID.fromString(adminPrincipal);
         } catch (IllegalArgumentException e) {
-            // If principal is email-based, look up the user
-            adminId = java.util.UUID.fromString(adminPrincipal);
+            // Principal is email — look up user
+            adminId = userRepository.findByEmail(adminPrincipal)
+                .map(User::getId)
+                .orElseThrow(() -> new RuntimeException("Admin user not found for: " + adminPrincipal));
         }
 
         ImpersonationTokenDTO token = impersonationService.impersonate(request.getUserId(), adminId);

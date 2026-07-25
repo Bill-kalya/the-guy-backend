@@ -1,6 +1,8 @@
 package com.theguy.app.controller;
 
 import com.theguy.app.dto.ApiResponse;
+import com.theguy.app.entity.User;
+import com.theguy.app.repository.UserRepository;
 import com.theguy.app.service.TrustSafetyService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import java.util.UUID;
 public class AdminTrustSafetyController {
 
     private final TrustSafetyService trustSafetyService;
+    private final UserRepository userRepository;
 
     @GetMapping("/summary")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getSummary() {
@@ -93,8 +96,23 @@ public class AdminTrustSafetyController {
         }
         Object principal = auth.getPrincipal();
         if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
-            return UUID.fromString(userDetails.getUsername());
+            String username = userDetails.getUsername();
+            try {
+                return UUID.fromString(username);
+            } catch (IllegalArgumentException e) {
+                // Username is email — look up user
+                return userRepository.findByEmail(username)
+                    .map(User::getId)
+                    .orElseThrow(() -> new IllegalStateException("Admin user not found"));
+            }
         }
-        return UUID.fromString(principal.toString());
+        String principalStr = principal.toString();
+        try {
+            return UUID.fromString(principalStr);
+        } catch (IllegalArgumentException e) {
+            return userRepository.findByEmail(principalStr)
+                .map(User::getId)
+                .orElseThrow(() -> new IllegalStateException("Admin user not found"));
+        }
     }
 }

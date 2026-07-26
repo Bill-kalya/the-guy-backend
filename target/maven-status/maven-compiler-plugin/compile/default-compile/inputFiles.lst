@@ -22,6 +22,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\VerifyOtpRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\VerificationDocumentType.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\payment\mpesa\MpesaPaymentProvider.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\AdminJobsController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ReviewDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Payment.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\ProviderDetailDTO.java
@@ -74,6 +75,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Prov
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\WalletRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\PaymentGatewayController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ImpersonationRequest.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\JobSummaryDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\ProviderPerformanceDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ReputationDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\payment\PaymentResponse.java
@@ -199,13 +201,16 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\AuthRes
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\PriceEstimateDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ProviderResponseDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\UpdateProfileRequest.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\JobListItemDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\UserRepository.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\PlatformStatsController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\MatchingLog.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\ChatRoomRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Review.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\UserService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\ModerationCase.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\MatchingService.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\AdminJobsService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\GoogleAuthRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\RiskScoreRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\JobRequestStatus.java

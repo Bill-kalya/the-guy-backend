@@ -98,6 +98,7 @@ public class AdminController {
     }
 
     // ── Audit Logs ────────────────────────────────────────
+    @GetMapping("/audit-logs")
     public ResponseEntity<ApiResponse<Page<AdminAction>>> getAuditLogs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,

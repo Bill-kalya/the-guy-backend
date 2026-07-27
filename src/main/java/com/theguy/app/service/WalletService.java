@@ -34,6 +34,7 @@ public class WalletService {
                             .provider(provider)
                             .pendingBalance(0.0)
                             .availableBalance(0.0)
+                            .reservedBalance(0.0)
                             .currency("KES")
                             .build();
                     log.info("Created wallet for provider: {}", providerId);
@@ -81,30 +82,78 @@ public class WalletService {
                 .build();
         walletTransactionRepository.save(tx);
 
-        log.info("Wallet RELEASED: provider={}, amount={}", providerId, amount);
+        log.info("Wallet RELEASED pending->available: provider={}, amount={}", providerId, amount);
         return wallet;
     }
 
     @Transactional
-    public Wallet debitAvailable(UUID providerId, double amount, WalletReferenceType refType, UUID refId, String description) {
+    public Wallet reserveForPayout(UUID providerId, double amount, UUID payoutId, String description) {
         Wallet wallet = getOrCreateWallet(providerId);
         if (wallet.getAvailableBalance() < amount) {
             throw new IllegalStateException("Insufficient available balance: " + wallet.getAvailableBalance() + " < " + amount);
         }
         wallet.setAvailableBalance(wallet.getAvailableBalance() - amount);
+        wallet.setReservedBalance(wallet.getReservedBalance() + amount);
         walletRepository.save(wallet);
 
         WalletTransaction tx = WalletTransaction.builder()
                 .wallet(wallet)
                 .amount(amount)
                 .type(WalletEntryType.DEBIT)
-                .referenceType(refType)
-                .referenceId(refId)
+                .referenceType(WalletReferenceType.PAYOUT)
+                .referenceId(payoutId)
                 .description(description)
                 .build();
         walletTransactionRepository.save(tx);
 
-        log.info("Wallet DEBIT available: provider={}, amount={}, ref={}/{}", providerId, amount, refType, refId);
+        log.info("Wallet RESERVED for payout: provider={}, amount={}, payout={}", providerId, amount, payoutId);
+        return wallet;
+    }
+
+    @Transactional
+    public Wallet releaseReservation(UUID providerId, double amount, UUID payoutId, String description) {
+        Wallet wallet = getOrCreateWallet(providerId);
+        if (wallet.getReservedBalance() < amount) {
+            throw new IllegalStateException("Insufficient reserved balance: " + wallet.getReservedBalance() + " < " + amount);
+        }
+        wallet.setReservedBalance(wallet.getReservedBalance() - amount);
+        wallet.setAvailableBalance(wallet.getAvailableBalance() + amount);
+        walletRepository.save(wallet);
+
+        WalletTransaction tx = WalletTransaction.builder()
+                .wallet(wallet)
+                .amount(amount)
+                .type(WalletEntryType.CREDIT)
+                .referenceType(WalletReferenceType.PAYOUT)
+                .referenceId(payoutId)
+                .description(description)
+                .build();
+        walletTransactionRepository.save(tx);
+
+        log.info("Wallet RESERVATION released: provider={}, amount={}, payout={}", providerId, amount, payoutId);
+        return wallet;
+    }
+
+    @Transactional
+    public Wallet confirmReservation(UUID providerId, double amount, UUID payoutId, String description) {
+        Wallet wallet = getOrCreateWallet(providerId);
+        if (wallet.getReservedBalance() < amount) {
+            throw new IllegalStateException("Insufficient reserved balance: " + wallet.getReservedBalance() + " < " + amount);
+        }
+        wallet.setReservedBalance(wallet.getReservedBalance() - amount);
+        walletRepository.save(wallet);
+
+        WalletTransaction tx = WalletTransaction.builder()
+                .wallet(wallet)
+                .amount(amount)
+                .type(WalletEntryType.DEBIT)
+                .referenceType(WalletReferenceType.PAYOUT)
+                .referenceId(payoutId)
+                .description(description)
+                .build();
+        walletTransactionRepository.save(tx);
+
+        log.info("Wallet RESERVATION confirmed (payout sent): provider={}, amount={}, payout={}", providerId, amount, payoutId);
         return wallet;
     }
 

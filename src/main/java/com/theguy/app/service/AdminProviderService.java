@@ -35,15 +35,10 @@ public class AdminProviderService {
     public ProviderSummaryDTO getProviderSummary() {
         try {
             long totalProviders = providerRepository.count();
-            long onlineNow = providerRepository.findByIsOnlineTrue().size();
-            long pendingVerification = providerRepository.findAll().stream()
-                    .filter(p -> p.getVerificationLevel() == VerificationLevel.NONE
-                            || p.getVerificationLevel() == VerificationLevel.BASIC)
-                    .count();
-            Double avgRating = providerRepository.findAll().stream()
-                    .mapToDouble(Provider::getRatingAvg)
-                    .average()
-                    .orElse(0.0);
+            long onlineNow = providerRepository.countByIsOnlineTrue();
+            long pendingVerification = providerRepository.countByVerificationLevelIn(
+                    java.util.List.of(VerificationLevel.NONE, VerificationLevel.BASIC));
+            Double avgRating = providerRepository.findAverageRating();
 
             return ProviderSummaryDTO.builder()
                     .totalProviders(totalProviders)

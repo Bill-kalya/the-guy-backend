@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 public class AdminUserService {
 
     private final UserRepository userRepository;
-    private final ProviderRepository providerRepository;
     private final RiskScoreRepository riskScoreRepository;
     private final JobRepository jobRepository;
     private final DisputeRepository disputeRepository;
@@ -33,13 +32,10 @@ public class AdminUserService {
     public UserSummaryDTO getUserSummary() {
         try {
             long totalUsers = userRepository.count();
-            long totalCustomers = userRepository.count() - userRepository.findAll().stream()
-                    .filter(u -> u.getRole() != Role.CUSTOMER).count();
-            long totalProviders = providerRepository.count();
-            long totalAdmins = userRepository.findAll().stream()
-                    .filter(u -> u.getRole() == Role.ADMIN).count();
-            long verifiedCount = userRepository.findAll().stream()
-                    .filter(User::isVerified).count();
+            long totalCustomers = userRepository.countByRole(Role.CUSTOMER);
+            long totalProviders = userRepository.countByRole(Role.PROVIDER);
+            long totalAdmins = userRepository.countByRole(Role.ADMIN);
+            long verifiedCount = userRepository.countByIsVerified(true);
             double verifiedPercentage = totalUsers > 0 ? (verifiedCount * 100.0 / totalUsers) : 0.0;
 
             return UserSummaryDTO.builder()

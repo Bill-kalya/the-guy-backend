@@ -10,7 +10,9 @@ import com.theguy.app.enums.Urgency;
 import com.theguy.app.repository.JobRepository;
 import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.UserRepository;
+import com.theguy.app.repository.PaymentRepository;
 import com.theguy.app.service.PriceSnapshotService;
+import com.theguy.app.payment.PaymentGatewayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,8 @@ public class JobService {
     private final NotificationService notificationService;
     private final LocationService locationService;
     private final PriceSnapshotService priceSnapshotService;
+    private final PaymentGatewayService paymentGatewayService;
+    private final PaymentRepository paymentRepository;
     
     @Transactional
     public Job requestJob(JobRequestDTO dto, User customer) {
@@ -169,6 +173,17 @@ public class JobService {
         provider.setJobsCompleted(provider.getJobsCompleted() + 1);
         providerRepository.save(provider);
         
+        // Release escrow: recognize revenue and credit provider wallet
+        try {
+            paymentRepository.findByJobId(jobId).stream()
+                .filter(p -> p.getStatus() == com.theguy.app.enums.PaymentStatus.HELD)
+                .findFirst()
+                .ifPresent(payment -> paymentGatewayService.releaseEscrowOnJobCompletion(
+                    jobId, providerId, payment.getId()));
+        } catch (Exception e) {
+            log.error("Failed to release escrow for job {}: {}", jobId, e.getMessage());
+        }
+        
         notificationService.notifyCustomer(
             job.getCustomer().getId().toString(),
             Map.of("type", "JOB_COMPLETED", "jobId", jobId)
@@ -178,7 +193,7 @@ public class JobService {
     @Transactional
     public void cancelJob(UUID jobId, UUID userId, String role, String reason) {
         Job job = jobRepository.findById(jobId)
-            .orElseThrow(() -> new RuntimeException("Job not found"));
+                .orElseThrow(() -> new RuntimeException("Job not found"));
         
         boolean isAuthorized = false;
         if ("PROVIDER".equals(role) && job.getProvider() != null && job.getProvider().getId().equals(userId)) {
@@ -200,6 +215,18 @@ public class JobService {
         JobStatus previousStatus = job.getStatus();
         job.setStatus(JobStatus.CANCELLED);
         jobRepository.save(job);
+        
+        // Refund escrow if payment was held
+        if (previousStatus != JobStatus.REQUESTED && previousStatus != JobStatus.MATCHING) {
+            try {
+                paymentRepository.findByJobId(jobId).stream()
+                    .filter(p -> p.getStatus() == com.theguy.app.enums.PaymentStatus.HELD)
+                    .findFirst()
+                    .ifPresent(payment -> paymentGatewayService.refundEscrowOnCancellation(jobId, payment.getId()));
+            } catch (Exception e) {
+                log.error("Failed to refund escrow for cancelled job {}: {}", jobId, e.getMessage());
+            }
+        }
         
         // Update provider stats if they were assigned
         if (job.getProvider() != null && previousStatus == JobStatus.ASSIGNED) {
@@ -318,6 +345,19 @@ public class JobService {
         job.setStatus(JobStatus.COMPLETED);
         job.setCompletedAt(LocalDateTime.now());
         jobRepository.save(job);
+
+        // Release escrow: recognize revenue and credit provider wallet
+        if (job.getProvider() != null) {
+            try {
+                paymentRepository.findByJobId(jobId).stream()
+                    .filter(p -> p.getStatus() == com.theguy.app.enums.PaymentStatus.HELD)
+                    .findFirst()
+                    .ifPresent(payment -> paymentGatewayService.releaseEscrowOnJobCompletion(
+                        jobId, job.getProvider().getId(), payment.getId()));
+            } catch (Exception e) {
+                log.error("Failed to release escrow for job {}: {}", jobId, e.getMessage());
+            }
+        }
 
         log.info("Job {} completed", jobId);
     }

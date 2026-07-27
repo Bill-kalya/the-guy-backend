@@ -1,6 +1,7 @@
 package com.theguy.app.repository;
 
 import com.theguy.app.entity.User;
+import com.theguy.app.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +23,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     
     @Query("SELECT COUNT(j) FROM Job j WHERE j.customer.id = :userId AND j.status = 'COMPLETED'")
     Long countCompletedJobsByCustomer(@Param("userId") UUID userId);
+
+    long countByRole(Role role);
+
+    long countByIsVerified(boolean isVerified);
 }

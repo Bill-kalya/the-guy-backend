@@ -24,6 +24,13 @@ public interface ProviderRepository extends JpaRepository<Provider, UUID> {
 
     long countByProviderStatus(String providerStatus);
 
+    long countByIsOnlineTrue();
+
+    @Query("SELECT COALESCE(AVG(p.ratingAvg), 0.0) FROM Provider p")
+    Double findAverageRating();
+
+    long countByVerificationLevelIn(java.util.Collection<com.theguy.app.enums.VerificationLevel> levels);
+
     @Query(value = """
         SELECT p.*, COALESCE(rs.score, 0) AS risk_score_val, rs.risk_level AS risk_level_val
         FROM providers p

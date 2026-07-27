@@ -1,11 +1,13 @@
 package com.theguy.app.controller;
 
+import com.theguy.app.entity.Job;
 import com.theguy.app.payment.PaymentGatewayService;
 import com.theguy.app.payment.PaymentProvider;
 import com.theguy.app.payment.PaymentResponse;
 import com.theguy.app.payment.mpesa.MpesaPaymentProvider;
 import com.theguy.app.payment.mpesa.MpesaTransaction;
 import com.theguy.app.payment.mpesa.MpesaTransactionStatus;
+import com.theguy.app.repository.JobRepository;
 import com.theguy.app.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,30 +29,49 @@ public class PaymentGatewayController {
     private final PaymentGatewayService gatewayService;
     private final MpesaPaymentProvider mpesaProvider;
     private final PaymentService paymentService;
+    private final JobRepository jobRepository;
 
     @PostMapping("/initiate")
-    public ResponseEntity<?> initiatePayment(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<?> initiatePayment(@RequestBody Map<String, Object> request, Authentication auth) {
         try {
-            UUID jobId = UUID.fromString((String) request.get("jobId"));
-            UUID customerId = UUID.fromString((String) request.get("customerId"));
-            UUID providerId = UUID.fromString((String) request.get("providerId"));
-            BigDecimal amount = new BigDecimal(request.get("amount").toString());
-            String currency = (String) request.getOrDefault("currency", "KES");
-            String method = (String) request.getOrDefault("method", "MPESA");
+            String jobIdStr = (String) request.get("jobId");
+            UUID jobId = UUID.fromString(jobIdStr);
 
+            Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found: " + jobIdStr));
+
+            UUID customerId = job.getCustomer().getId();
+            UUID providerId = job.getProvider() != null ? job.getProvider().getId() : null;
+            if (providerId == null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Job has no assigned provider"
+                ));
+            }
+
+            BigDecimal amount = job.getFinalPrice() != null
+                ? BigDecimal.valueOf(job.getFinalPrice())
+                : BigDecimal.valueOf(job.getPriceEstimateMin() != null ? job.getPriceEstimateMin() : 0);
+
+            String method = (String) request.getOrDefault("method", "MPESA");
             com.theguy.app.enums.PaymentMethod paymentMethod =
                 com.theguy.app.enums.PaymentMethod.valueOf(method.toUpperCase());
 
-            Map<String, Object> metadata = Map.of(
-                "phoneNumber", request.getOrDefault("phoneNumber", ""),
-                "description", request.getOrDefault("description", "")
-            );
+            Map<String, Object> metadata = new HashMap<>();
+            metadata.put("phoneNumber", request.getOrDefault("phoneNumber", ""));
+            metadata.put("description", request.getOrDefault("description", "Payment for job " + jobIdStr));
 
             PaymentResponse response = gatewayService.initiatePayment(
-                jobId, customerId, providerId, amount, currency, paymentMethod, metadata
+                jobId, customerId, providerId, amount, "KES", paymentMethod, metadata
             );
 
-            return ResponseEntity.ok(response);
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", response.isSuccess());
+            result.put("checkoutRequestId", response.getTransactionId());
+            result.put("message", response.getMessage());
+            result.put("amount", amount.doubleValue());
+
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("Payment initiation failed: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of(

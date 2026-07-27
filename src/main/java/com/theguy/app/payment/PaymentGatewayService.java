@@ -130,31 +130,103 @@ public class PaymentGatewayService {
 
     private void processSuccessfulPayment(Payment payment) {
         double totalAmount = payment.getAmount().doubleValue();
-        double platformFee = totalAmount * 0.10;
-        double providerAmount = totalAmount - platformFee;
 
-        walletService.creditPending(payment.getProviderId(), providerAmount,
-            WalletReferenceType.JOB, payment.getJobId(),
-            "Payment received for job via " + payment.getPaymentMethod());
+        // Calculate processor fee (M-Pesa: ~0.5% of transaction)
+        double processorFeePct = 0.5;
+        double processorFee = Math.round(totalAmount * processorFeePct * 100.0) / 100.0;
+        payment.setProcessorFee(BigDecimal.valueOf(processorFee));
+        payment.setProcessorFeePercentage(BigDecimal.valueOf(processorFeePct));
 
+        // Revenue recognition: hold ALL funds in escrow until job completes.
+        // At this point, no revenue is earned and no provider liability exists.
+        ledgerService.recordDoubleEntry(
+            AccountCode.ESCROW, AccountCode.CUSTOMER_PREPAID,
+            totalAmount, "KES", "PAYMENT", payment.getId(),
+            "Customer funds held in escrow for job");
+
+        auditLogService.log(null, AuditActorType.SYSTEM, FinancialAction.ESCROW_FUNDED,
+            "Payment", payment.getId(),
+            String.format("Escrow funded: KES %.2f via %s (processor fee: KES %.2f) for job",
+                totalAmount, payment.getPaymentMethod(), processorFee));
+
+        log.info("Payment confirmed (escrow): id={}, amount={}, processorFee={}",
+            payment.getId(), totalAmount, processorFee);
+    }
+
+    @Transactional
+    public void releaseEscrowOnJobCompletion(UUID jobId, UUID providerId, UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId).orElse(null);
+        if (payment == null || payment.getStatus() != PaymentStatus.HELD) {
+            log.warn("No HELD payment found for job completion: jobId={}", jobId);
+            return;
+        }
+
+        double totalAmount = payment.getAmount().doubleValue();
+        double processorFee = payment.getProcessorFee() != null ? payment.getProcessorFee().doubleValue() : 0.0;
+        double netAmount = totalAmount - processorFee;
+        double platformFee = netAmount * 0.10;
+        double providerAmount = netAmount - platformFee;
+        double taxAmount = platformFee * 0.16;
+
+        // Move funds from escrow to provider pending wallet
+        walletService.creditPending(providerId, providerAmount,
+            WalletReferenceType.JOB, jobId,
+            "Escrow released: provider earnings for completed job");
+
+        // Platform revenue (net of processor fee)
         ledgerService.recordDoubleEntry(
             AccountCode.ESCROW, AccountCode.PLATFORM_REVENUE,
-            platformFee, "KES", "PAYMENT", payment.getId(),
-            "Platform fee (10%) for job");
+            platformFee, "KES", "JOB_COMPLETED", jobId,
+            "Platform fee (10%) earned on job completion");
+
         ledgerService.recordDoubleEntry(
             AccountCode.ESCROW, AccountCode.PROVIDER_EARNINGS,
-            providerAmount, "KES", "PAYMENT", payment.getId(),
-            "Provider earnings for job");
+            providerAmount, "KES", "JOB_COMPLETED", jobId,
+            "Provider earnings released on job completion");
 
-        double taxAmount = platformFee * 0.16;
-        ledgerService.record(AccountCode.TAX_LIABILITY, EntryType.CREDIT,
-            taxAmount, "KES", "PAYMENT", payment.getId(),
-            "VAT on platform fee");
+        // Balanced tax entry: DEBIT PLATFORM_REVENUE, CREDIT TAX_LIABILITY
+        ledgerService.recordDoubleEntry(
+            AccountCode.PLATFORM_REVENUE, AccountCode.TAX_LIABILITY,
+            taxAmount, "KES", "JOB_COMPLETED", jobId,
+            "VAT (16%) on platform fee");
 
-        auditLogService.log(null, AuditActorType.SYSTEM, FinancialAction.PAYMENT_RECEIVED,
-            "Payment", payment.getId(),
-            String.format("Payment of KES %.2f received via %s", totalAmount, payment.getPaymentMethod()));
+        payment.setStatus(PaymentStatus.RELEASED);
+        payment.setReleasedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
 
-        log.info("Payment confirmed: id={}, provider={}, amount={}", payment.getId(), payment.getProviderId(), totalAmount);
+        auditLogService.log(null, AuditActorType.SYSTEM, FinancialAction.ESCROW_RELEASED,
+            "Payment", paymentId,
+            String.format("Escrow released: KES %.2f (processor: %.2f, platform: %.2f, provider: %.2f, tax: %.2f)",
+                totalAmount, processorFee, platformFee, providerAmount, taxAmount));
+
+        log.info("Escrow released: jobId={}, total={}, processor={}, platform={}, provider={}, tax={}",
+            jobId, totalAmount, processorFee, platformFee, providerAmount, taxAmount);
+    }
+
+    @Transactional
+    public void refundEscrowOnCancellation(UUID jobId, UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId).orElse(null);
+        if (payment == null || payment.getStatus() != PaymentStatus.HELD) {
+            log.warn("No HELD payment found for cancellation refund: jobId={}", jobId);
+            return;
+        }
+
+        double totalAmount = payment.getAmount().doubleValue();
+
+        // Reverse the escrow entry: debit CUSTOMER_PREPAID, credit ESCROW
+        ledgerService.recordDoubleEntry(
+            AccountCode.CUSTOMER_PREPAID, AccountCode.ESCROW,
+            totalAmount, "KES", "REFUND", jobId,
+            "Escrow refunded: job cancelled");
+
+        payment.setStatus(PaymentStatus.REFUNDED);
+        payment.setRefundedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        auditLogService.log(null, AuditActorType.SYSTEM, FinancialAction.REFUND_PROCESSED,
+            "Payment", paymentId,
+            String.format("Refund processed: KES %.2f for cancelled job", totalAmount));
+
+        log.info("Escrow refunded: jobId={}, amount={}", jobId, totalAmount);
     }
 }

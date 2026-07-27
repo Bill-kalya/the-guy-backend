@@ -5,6 +5,7 @@ import com.theguy.app.payment.PaymentResponse;
 import com.theguy.app.payment.PaymentStatusResponse;
 import com.theguy.app.payment.RefundResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -15,10 +16,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class MpesaPaymentProvider implements PaymentProvider {
 
     @Value("${mpesa.consumer-key:}")
@@ -41,7 +42,7 @@ public class MpesaPaymentProvider implements PaymentProvider {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final Map<String, MpesaTransaction> transactionStore = new ConcurrentHashMap<>();
+    private final MpesaTransactionRepository mpesaTransactionRepository;
 
     private String getBaseUrl() {
         return "sandbox".equals(environment)
@@ -103,7 +104,6 @@ public class MpesaPaymentProvider implements PaymentProvider {
                 String checkoutRequestId = (String) response.getBody().get("CheckoutRequestID");
 
                 MpesaTransaction txn = MpesaTransaction.builder()
-                    .id(UUID.randomUUID())
                     .checkoutRequestId(checkoutRequestId)
                     .merchantRequestId((String) response.getBody().get("MerchantRequestID"))
                     .phoneNumber(phoneNumber)
@@ -112,7 +112,7 @@ public class MpesaPaymentProvider implements PaymentProvider {
                     .reference(reference)
                     .createdAt(LocalDateTime.now())
                     .build();
-                transactionStore.put(checkoutRequestId, txn);
+                mpesaTransactionRepository.save(txn);
 
                 return PaymentResponse.builder()
                     .success(true)
@@ -143,7 +143,7 @@ public class MpesaPaymentProvider implements PaymentProvider {
 
     @Override
     public PaymentStatusResponse getPaymentStatus(String transactionId) {
-        MpesaTransaction txn = transactionStore.get(transactionId);
+        MpesaTransaction txn = mpesaTransactionRepository.findByCheckoutRequestId(transactionId).orElse(null);
         if (txn == null) {
             return PaymentStatusResponse.builder()
                 .success(false)
@@ -183,16 +183,14 @@ public class MpesaPaymentProvider implements PaymentProvider {
             int resultCode = ((Number) callback.get("ResultCode")).intValue();
             String resultDesc = (String) callback.get("ResultDesc");
 
-            MpesaTransaction txn = transactionStore.get(checkoutRequestId);
+            MpesaTransaction txn = mpesaTransactionRepository.findByCheckoutRequestId(checkoutRequestId).orElse(null);
             if (txn == null) {
                 txn = MpesaTransaction.builder()
-                    .id(UUID.randomUUID())
                     .checkoutRequestId(checkoutRequestId)
                     .merchantRequestId(merchantRequestId)
                     .status(MpesaTransactionStatus.PENDING)
                     .createdAt(LocalDateTime.now())
                     .build();
-                transactionStore.put(checkoutRequestId, txn);
             }
 
             txn.setCallbackPayload(objectMapper.writeValueAsString(callbackBody));
@@ -220,7 +218,7 @@ public class MpesaPaymentProvider implements PaymentProvider {
                 log.warn("M-Pesa callback FAILED: checkout={}, code={}, desc={}", checkoutRequestId, resultCode, resultDesc);
             }
 
-            transactionStore.put(checkoutRequestId, txn);
+            mpesaTransactionRepository.save(txn);
             return txn;
 
         } catch (Exception e) {

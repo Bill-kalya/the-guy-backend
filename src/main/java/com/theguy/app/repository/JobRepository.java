@@ -45,4 +45,10 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
     
     @Query("SELECT COALESCE(SUM(j.finalPrice), 0) FROM Job j WHERE j.provider.id = :providerId AND j.status = 'COMPLETED'")
     Double getTotalEarningsByProvider(@Param("providerId") UUID providerId);
+
+    @Query("SELECT COUNT(j) FROM Job j WHERE j.provider.id = :providerId AND j.status = 'COMPLETED' AND j.completedAt >= :since")
+    Long countCompletedByProviderSince(@Param("providerId") UUID providerId, @Param("since") LocalDateTime since);
+
+    @Query("SELECT COALESCE(SUM(j.finalPrice), 0) FROM Job j WHERE j.provider.id = :providerId AND j.status = 'COMPLETED' AND j.completedAt >= :since")
+    Double getTotalEarningsByProviderSince(@Param("providerId") UUID providerId, @Param("since") LocalDateTime since);
 }

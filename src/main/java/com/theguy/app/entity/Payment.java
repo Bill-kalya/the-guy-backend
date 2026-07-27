@@ -59,6 +59,12 @@ public class Payment extends BaseEntity {
     private String failureReason;
     
     private Integer retryCount = 0;
+
+    @Column(name = "processor_fee", precision = 10, scale = 2)
+    private BigDecimal processorFee = BigDecimal.ZERO;
+
+    @Column(name = "processor_fee_percentage", precision = 5, scale = 2)
+    private BigDecimal processorFeePercentage = BigDecimal.ZERO;
     
     @Version
     private Integer version;

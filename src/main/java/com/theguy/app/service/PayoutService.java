@@ -30,21 +30,23 @@ public class PayoutService {
         Provider provider = providerRepository.findById(providerId)
                 .orElseThrow(() -> new RuntimeException("Provider not found"));
 
-        walletService.debitAvailable(providerId, amount, WalletReferenceType.PAYOUT, providerId, "Payout request");
-
-        ledgerService.recordDoubleEntry(
-                com.theguy.app.enums.AccountCode.PAYOUT_OUTSTANDING,
-                com.theguy.app.enums.AccountCode.PROVIDER_EARNINGS,
-                amount, "KES", "PAYOUT", providerId, "Payout requested by provider");
-
+        // Create payout entity first to get the ID for reservation
         Payout payout = Payout.builder()
                 .provider(provider)
                 .amount(amount)
                 .method(com.theguy.app.enums.PaymentMethod.MPESA)
                 .status(PayoutStatus.PENDING)
                 .build();
-
         Payout saved = payoutRepository.save(payout);
+
+        // Reserve funds: availableBalance -> reservedBalance (prevents duplicate withdrawals)
+        walletService.reserveForPayout(providerId, amount, saved.getId(), "Payout request reserved");
+
+        ledgerService.recordDoubleEntry(
+                com.theguy.app.enums.AccountCode.PAYOUT_OUTSTANDING,
+                com.theguy.app.enums.AccountCode.PROVIDER_EARNINGS,
+                amount, "KES", "PAYOUT", saved.getId(), "Payout requested by provider");
+
         log.info("Payout requested: provider={}, amount={}, payoutId={}", providerId, amount, saved.getId());
 
         auditLogService.log(providerId, com.theguy.app.enums.AuditActorType.PROVIDER,
@@ -78,6 +80,10 @@ public class PayoutService {
         payout.setProcessedAt(LocalDateTime.now());
         payoutRepository.save(payout);
 
+        // Confirm reservation: reservedBalance -> deducted (funds sent to provider)
+        walletService.confirmReservation(payout.getProvider().getId(), payout.getAmount(),
+                payoutId, "Payout completed via M-Pesa");
+
         auditLogService.log(null, com.theguy.app.enums.AuditActorType.SYSTEM,
                 com.theguy.app.enums.FinancialAction.PAYOUT_COMPLETED,
                 "Payout", payoutId, "Payout completed via M-Pesa");
@@ -93,12 +99,13 @@ public class PayoutService {
         payout.setStatus(PayoutStatus.FAILED);
         payoutRepository.save(payout);
 
-        walletService.creditPending(payout.getProvider().getId(), payout.getAmount(),
-                WalletReferenceType.PAYOUT, payoutId, "Payout failed - refunded to wallet");
+        // Release reservation: reservedBalance -> availableBalance (funds return to available)
+        walletService.releaseReservation(payout.getProvider().getId(), payout.getAmount(),
+                payoutId, "Payout failed - reservation released back to available");
 
         auditLogService.log(null, com.theguy.app.enums.AuditActorType.SYSTEM,
                 com.theguy.app.enums.FinancialAction.PAYOUT_FAILED,
-                "Payout", payoutId, "Payout failed - funds returned to wallet");
+                "Payout", payoutId, "Payout failed - funds returned to available balance");
 
         log.warn("Payout failed: payoutId={}", payoutId);
         return payout;

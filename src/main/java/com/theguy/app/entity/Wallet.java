@@ -28,6 +28,10 @@ public class Wallet extends BaseEntity {
     @Builder.Default
     private Double availableBalance = 0.0;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Double reservedBalance = 0.0;
+
     @Column(nullable = false, length = 3)
     @Builder.Default
     private String currency = "KES";

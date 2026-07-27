@@ -152,14 +152,28 @@ public class ProviderService {
         Long completedJobs = jobRepository.countCompletedByProvider(provider.getId());
         Double totalEarnings = jobRepository.getTotalEarningsByProvider(provider.getId());
 
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.time.LocalDateTime todayStart = now.toLocalDate().atStartOfDay();
+        java.time.LocalDateTime weekStart = now.toLocalDate().minusDays(now.getDayOfWeek().getValue() - 1).atStartOfDay();
+        java.time.LocalDateTime monthStart = now.toLocalDate().withDayOfMonth(1).atStartOfDay();
+
+        Long todayJobs = jobRepository.countCompletedByProviderSince(provider.getId(), todayStart);
+        Long weekJobs = jobRepository.countCompletedByProviderSince(provider.getId(), weekStart);
+        Long monthJobs = jobRepository.countCompletedByProviderSince(provider.getId(), monthStart);
+        Double todayEarnings = jobRepository.getTotalEarningsByProviderSince(provider.getId(), todayStart);
+        Double weekEarnings = jobRepository.getTotalEarningsByProviderSince(provider.getId(), weekStart);
+        Double monthEarnings = jobRepository.getTotalEarningsByProviderSince(provider.getId(), monthStart);
+
         double pendingBalance = 0.0;
         double availableBalance = 0.0;
+        double reservedBalance = 0.0;
         String currency = "KES";
 
         try {
             var wallet = walletService.getWallet(provider.getId());
             pendingBalance = wallet.getPendingBalance();
             availableBalance = wallet.getAvailableBalance();
+            reservedBalance = wallet.getReservedBalance() != null ? wallet.getReservedBalance() : 0.0;
             currency = wallet.getCurrency();
         } catch (Exception e) {
             log.warn("Could not load wallet for provider {}: {}", provider.getId(), e.getMessage());
@@ -168,8 +182,15 @@ public class ProviderService {
         Map<String, Object> earnings = new HashMap<>();
         earnings.put("totalEarnings", totalEarnings != null ? totalEarnings : 0.0);
         earnings.put("jobsCompleted", completedJobs != null ? completedJobs : 0);
+        earnings.put("todayEarnings", todayEarnings != null ? todayEarnings : 0.0);
+        earnings.put("thisWeekEarnings", weekEarnings != null ? weekEarnings : 0.0);
+        earnings.put("thisMonthEarnings", monthEarnings != null ? monthEarnings : 0.0);
+        earnings.put("todayJobs", todayJobs != null ? todayJobs : 0);
+        earnings.put("thisWeekJobs", weekJobs != null ? weekJobs : 0);
+        earnings.put("thisMonthJobs", monthJobs != null ? monthJobs : 0);
         earnings.put("pendingBalance", pendingBalance);
         earnings.put("availableBalance", availableBalance);
+        earnings.put("reservedBalance", reservedBalance);
         earnings.put("totalBalance", pendingBalance + availableBalance);
         earnings.put("currency", currency);
 

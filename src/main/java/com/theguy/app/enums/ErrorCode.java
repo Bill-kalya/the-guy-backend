@@ -19,6 +19,7 @@ public enum ErrorCode {
     // Provider
     PROVIDER_OFFLINE("PROVIDER_OFFLINE", "This provider is currently unavailable"),
     PROVIDER_BUSY("PROVIDER_BUSY", "This provider is currently busy"),
+    PROVIDER_PROFILE_MISSING("PROVIDER_PROFILE_MISSING", "Provider registration not completed"),
     VERIFICATION_REQUIRED("VERIFICATION_REQUIRED", "Please complete verification first"),
     
     // Booking

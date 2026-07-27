@@ -175,7 +175,9 @@ public class GlobalExceptionHandler {
         if (message == null) return ErrorCode.SERVER_ERROR;
         if (message.contains("Email already registered")) return ErrorCode.EMAIL_EXISTS;
         if (message.contains("User not found")) return ErrorCode.NOT_FOUND;
-        if (message.toLowerCase().contains("provider")) return ErrorCode.PROVIDER_OFFLINE;
+        if (message.contains("Provider profile not completed")) return ErrorCode.PROVIDER_PROFILE_MISSING;
+        if (message.contains("Provider not found")) return ErrorCode.NOT_FOUND;
+        if (message.toLowerCase().contains("provider offline") || message.toLowerCase().contains("provider is currently unavailable")) return ErrorCode.PROVIDER_OFFLINE;
         if (message.contains("locked")) return ErrorCode.ACCOUNT_LOCKED;
         if (message.contains("disabled") || message.contains("suspended")) return ErrorCode.ACCOUNT_SUSPENDED;
         if (message.contains("OTP") || message.contains("otp") || message.contains("Verification code")) {
@@ -187,7 +189,7 @@ public class GlobalExceptionHandler {
     private HttpStatus mapCodeToStatus(ErrorCode code) {
         return switch (code) {
             case EMAIL_EXISTS -> HttpStatus.CONFLICT;
-            case NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case NOT_FOUND, PROVIDER_PROFILE_MISSING -> HttpStatus.NOT_FOUND;
             case UNAUTHORIZED -> HttpStatus.UNAUTHORIZED;
             case FORBIDDEN -> HttpStatus.FORBIDDEN;
             case ACCOUNT_LOCKED, ACCOUNT_SUSPENDED -> HttpStatus.FORBIDDEN;

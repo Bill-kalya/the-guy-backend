@@ -15,5 +15,6 @@ public class UserDto {
     private String avatarUrl;
     private String role;
     private boolean isVerified;
+    private boolean providerRegistered;
     private LocalDateTime createdAt;
 }

@@ -88,7 +88,7 @@ public class ProviderController {
             .orElseThrow(() -> new RuntimeException("User not found"));
         
         Provider provider = providerRepository.findByUserId(user.getId())
-            .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+            .orElseThrow(() -> new RuntimeException("Provider profile not completed"));
         
         providerService.updateOnlineStatus(provider.getId(), online);
         
@@ -131,7 +131,7 @@ public class ProviderController {
         User user = userRepository.findByEmail(authentication.getName())
             .orElseThrow(() -> new RuntimeException("User not found"));
         return providerRepository.findByUserId(user.getId())
-            .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+            .orElseThrow(() -> new RuntimeException("Provider profile not completed"));
     }
 
     @GetMapping("/me/performance")

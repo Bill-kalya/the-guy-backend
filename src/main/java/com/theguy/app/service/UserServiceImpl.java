@@ -3,6 +3,7 @@ package com.theguy.app.service;
 import com.theguy.app.dto.UpdateProfileRequest;
 import com.theguy.app.dto.UserDto;
 import com.theguy.app.entity.User;
+import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final ProviderRepository providerRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -63,6 +65,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserDto mapToDto(User user) {
+        boolean providerRegistered = providerRepository.findByUserId(user.getId()).isPresent();
         return UserDto.builder()
                 .id(user.getId())
                 .fullName(user.getFullName())
@@ -71,6 +74,7 @@ public class UserServiceImpl implements UserService {
                 .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().getApiRole())
                 .isVerified(user.isVerified())
+                .providerRegistered(providerRegistered)
                 .createdAt(user.getCreatedAt())
                 .build();
     }

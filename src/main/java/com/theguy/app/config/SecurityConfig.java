@@ -66,7 +66,7 @@ public class SecurityConfig {
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/jobs/**")).authenticated()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/providers/**")).authenticated()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/reviews/**")).authenticated()
-                .requestMatchers(AntPathRequestMatcher.antMatcher("/api/admin/**")).hasRole("ADMIN")
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/api/v1/admin/**")).hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider());

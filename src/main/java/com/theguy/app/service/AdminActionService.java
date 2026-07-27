@@ -39,8 +39,7 @@ public class AdminActionService {
 
     @Transactional(readOnly = true)
     public Page<AdminAction> getAuditLogs(UUID adminId, String actionType, Pageable pageable) {
-        AdminAction.ActionType parsed = (actionType == null || actionType.isBlank()) ? null : AdminAction.ActionType.valueOf(actionType);
-        return adminActionRepository.findAuditLogs(adminId, parsed, pageable);
+        return adminActionRepository.findAuditLogs(adminId, actionType, pageable);
     }
 
     @Transactional

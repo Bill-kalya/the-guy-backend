@@ -12,13 +12,14 @@ import java.util.UUID;
 
 public interface AdminActionRepository extends JpaRepository<AdminAction, UUID> {
 
-    @Query("SELECT a FROM AdminAction a " +
-            "WHERE (:adminId IS NULL OR a.adminId = :adminId) " +
-            "AND (:actionType IS NULL OR a.actionType = :actionType) " +
-            "ORDER BY a.createdAt DESC")
+    @Query(value = """
+        SELECT * FROM admin_actions a
+        WHERE (CAST(:adminId AS uuid) IS NULL OR a.admin_id = CAST(:adminId AS uuid))
+          AND (CAST(:actionType AS varchar) IS NULL OR a.action_type = CAST(:actionType AS varchar))
+        """, nativeQuery = true)
     Page<AdminAction> findAuditLogs(
             @Param("adminId") UUID adminId,
-            @Param("actionType") AdminAction.ActionType actionType,
+            @Param("actionType") String actionType,
             Pageable pageable
     );
 

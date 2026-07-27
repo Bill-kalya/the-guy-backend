@@ -88,6 +88,9 @@ public class ProviderService {
         providerRepository.save(savedProvider);
         
         user.setRole(com.theguy.app.enums.Role.PROVIDER);
+        if (dto.getProfileImageUrl() != null) {
+            user.setAvatarUrl(dto.getProfileImageUrl());
+        }
         userRepository.save(user);
         
         if (dto.getLatitude() != null && dto.getLongitude() != null) {

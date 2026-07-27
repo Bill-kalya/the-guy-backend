@@ -10,6 +10,7 @@ public class NearbyProviderDTO {
     private UUID id;
     private String name;
     private String category;
+    private String profileImageUrl;
     private Double latitude;
     private Double longitude;
     private Double distance;  // Distance in meters

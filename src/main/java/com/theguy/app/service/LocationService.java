@@ -113,6 +113,7 @@ public class LocationService {
                     .id(provider.getId())
                     .name(provider.getUser().getFullName())
                     .category(provider.getCategoryId() != null ? provider.getCategoryId() : "Unknown")
+                    .profileImageUrl(provider.getProfileImageUrl())
                     .latitude(location.getLatitude())
                     .longitude(location.getLongitude())
                     .distance(distance)

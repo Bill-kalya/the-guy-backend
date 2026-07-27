@@ -56,7 +56,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 try {
                     if (Boolean.TRUE.equals(redisTemplate.hasKey(blacklistKey))) {
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        response.getWriter().write("Token has been revoked");
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"success\":false,\"message\":\"Token has been revoked\"}");
                         return;
                     }
                 } catch (RuntimeException redisEx) {
@@ -65,7 +66,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 userId = jwtUtil.extractUserId(jwt);
                 
-                // Check for impersonation token — load impersonated user instead
                 try {
                     io.jsonwebtoken.Claims claims = jwtUtil.getClaimsFromToken(jwt);
                     String impersonatorId = claims.get("impersonator_id", String.class);
@@ -73,29 +73,19 @@ public class JwtFilter extends OncePerRequestFilter {
                         request.setAttribute("impersonatorId", impersonatorId);
                         log.debug("Impersonation token detected. Impersonator: {}, Target: {}", impersonatorId, userId);
                     }
-                } catch (Exception ignored) {
-                    // Not an impersonation token, proceed normally
-                }
+                } catch (Exception ignored) {}
             } catch (ExpiredJwtException e) {
-                log.warn("JWT token expired");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Token expired");
-                return;
+                log.warn("JWT token expired for path: {} — allowing request to proceed (Spring Security will enforce auth)", request.getRequestURI());
+                // Don't reject — let Spring Security's authorization rules decide
+                // Public endpoints (permitAll) will still work
+                // Protected endpoints will get 401 from the AuthenticationEntryPoint
             } catch (MalformedJwtException e) {
-                log.warn("Invalid JWT token");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid token");
-                return;
+                log.warn("Invalid JWT token for path: {}", request.getRequestURI());
+                // Don't reject — same as above
             } catch (SignatureException e) {
-                log.warn("JWT signature validation failed");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid token signature");
-                return;
+                log.warn("JWT signature validation failed for path: {}", request.getRequestURI());
             } catch (Exception e) {
                 log.error("JWT authentication error: {}", e.getMessage());
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Authentication failed");
-                return;
             }
         }
         
@@ -105,9 +95,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 userDetails = this.userDetailsService.loadUserByUsername(userId);
             } catch (UsernameNotFoundException e) {
                 log.warn("User not found for token: {}", userId);
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"success\":false,\"message\":\"Invalid or expired session\"}");
+                // Don't reject — let Spring Security handle it
+                chain.doFilter(request, response);
                 return;
             }
             
@@ -119,10 +108,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 log.debug("Authenticated user: {}", userId);
             } else {
                 log.warn("Invalid token for user: {}", userId);
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"success\":false,\"message\":\"Invalid or expired session\"}");
-                return;
+                // Don't reject — let Spring Security handle it
             }
         }
         
@@ -140,7 +126,13 @@ public class JwtFilter extends OncePerRequestFilter {
                path.startsWith("/auth/") ||
                path.startsWith("/api/public/") || 
                path.startsWith("/ws/") || 
+               path.startsWith("/api/platform/") ||
+               path.startsWith("/api/categories/") ||
+               path.startsWith("/api/search/") ||
                path.startsWith("/actuator/health") ||
+               path.startsWith("/v3/api-docs/") ||
+               path.startsWith("/swagger-ui/") ||
+               path.equals("/swagger-ui.html") ||
                path.startsWith("/h2-console/") ||
                path.equals("/error");
     }

@@ -84,7 +84,8 @@ public class FileController {
         }
 
         if (cloudName == null || cloudName.isBlank()) {
-            return ResponseEntity.internalServerError().body(ApiResponse.error("Cloudinary not configured"));
+            log.error("File upload failed: Cloudinary not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET env vars.");
+            return ResponseEntity.internalServerError().body(ApiResponse.error("File storage not configured. Please contact support."));
         }
 
         try {

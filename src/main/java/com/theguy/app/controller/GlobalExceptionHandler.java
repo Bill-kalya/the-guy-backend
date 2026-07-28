@@ -166,7 +166,10 @@ public class GlobalExceptionHandler {
             return ErrorCode.PHONE_INVALID.getCode();
         }
         if (springCode != null && springCode.contains("Size")) {
-            return ErrorCode.PASSWORD_WEAK.getCode();
+            return ErrorCode.VALIDATION_FAILED.getCode();
+        }
+        if (springCode != null && springCode.contains("NotBlank")) {
+            return ErrorCode.VALIDATION_FAILED.getCode();
         }
         return springCode;
     }

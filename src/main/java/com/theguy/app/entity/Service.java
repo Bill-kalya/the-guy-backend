@@ -33,5 +33,11 @@ public class Service {
 
     private BigDecimal basePrice;
 
+    private BigDecimal minPrice;
+
+    private BigDecimal maxPrice;
+
+    private Integer adjustmentPercent = 10;
+
     private Boolean isActive = true;
 }

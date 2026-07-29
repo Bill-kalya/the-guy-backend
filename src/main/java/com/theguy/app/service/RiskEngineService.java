@@ -105,8 +105,7 @@ public class RiskEngineService {
         else if (rating < 3.0) score += 10;
         else if (rating < 4.0) score += 5;
 
-        long disputeCount = disputeRepository.countByStatus(DisputeStatus.OPEN);
-        // note: simplified; without providerId-specific dispute query in repo
+        long disputeCount = disputeRepository.countByStatusAndJob_Provider_Id(DisputeStatus.OPEN, providerId);
         factors.put("disputeCount", disputeCount);
         if (disputeCount > 10) score += 20;
         else if (disputeCount > 5) score += 10;
@@ -129,7 +128,7 @@ public class RiskEngineService {
         User user = userRepository.findById(customerId).orElse(null);
         if (user == null) return 100;
 
-        long openDisputes = disputeRepository.countByStatus(DisputeStatus.OPEN);
+        long openDisputes = disputeRepository.countByStatusAndOpenedBy_Id(DisputeStatus.OPEN, customerId);
         factors.put("openDisputes", openDisputes);
         int score = 0;
         if (openDisputes > 5) score += 25;

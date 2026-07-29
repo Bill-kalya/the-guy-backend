@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
@@ -54,6 +55,7 @@ public class PayoutController {
         return ResponseEntity.ok(ApiResponse.success(payouts));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{payoutId}/approve")
     public ResponseEntity<?> approvePayout(@PathVariable UUID payoutId) {
         Payout payout = payoutService.approvePayout(payoutId);
@@ -63,6 +65,7 @@ public class PayoutController {
         )));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{payoutId}/complete")
     public ResponseEntity<?> completePayout(@PathVariable UUID payoutId) {
         Payout payout = payoutService.completePayout(payoutId);
@@ -72,6 +75,7 @@ public class PayoutController {
         )));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{payoutId}/fail")
     public ResponseEntity<?> failPayout(@PathVariable UUID payoutId) {
         Payout payout = payoutService.failPayout(payoutId);

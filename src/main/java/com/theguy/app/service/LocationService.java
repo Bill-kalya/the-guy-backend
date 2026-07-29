@@ -8,6 +8,7 @@ import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.utils.LocationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -159,5 +160,23 @@ public class LocationService {
             .collect(Collectors.toList());
 
         return locationRepository.findByProviderIds(providerIds);
+    }
+
+    @Scheduled(fixedRate = 30_000)
+    @Transactional
+    public void cleanupStaleLocations() {
+        LocalDateTime staleThreshold = LocalDateTime.now().minusSeconds(60);
+        List<UUID> staleIds = locationRepository.findStaleProviderIds(staleThreshold);
+
+        if (staleIds.isEmpty()) return;
+
+        List<Provider> staleProviders = providerRepository.findAllById(staleIds);
+        for (Provider provider : staleProviders) {
+            provider.setOnline(false);
+            provider.setLastActiveAt(LocalDateTime.now());
+        }
+        providerRepository.saveAll(staleProviders);
+
+        log.info("Marked {} providers offline due to stale location (>60s)", staleIds.size());
     }
 }

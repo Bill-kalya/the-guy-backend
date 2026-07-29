@@ -13,9 +13,11 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Controller
@@ -24,6 +26,10 @@ public class LocationWebSocketController {
 
     private final LocationService locationService;
     private final NotificationService notificationService;
+
+    private final ConcurrentHashMap<UUID, LocalDateTime> lastUpdatePerProvider = new ConcurrentHashMap<>();
+
+    private static final Duration MIN_UPDATE_INTERVAL = Duration.ofMillis(500);
 
     /**
      * Provider sends location update every 3-5 seconds
@@ -34,11 +40,32 @@ public class LocationWebSocketController {
             @Payload LocationUpdatePayload payload,
             Principal principal) {
 
-        // Extract provider ID from auth token
-        String providerIdStr = principal.getName();
-        UUID providerId = UUID.fromString(providerIdStr);
+        if (principal == null) {
+            log.warn("Location update rejected: unauthenticated");
+            return;
+        }
 
-        // Save location to database
+        UUID providerId = UUID.fromString(principal.getName());
+
+        if (payload.getLatitude() == null || payload.getLongitude() == null) {
+            log.warn("Location update rejected for {}: missing coordinates", providerId);
+            return;
+        }
+
+        if (payload.getLatitude() < -90 || payload.getLatitude() > 90 ||
+            payload.getLongitude() < -180 || payload.getLongitude() > 180) {
+            log.warn("Location update rejected for {}: invalid coordinates", providerId);
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime lastUpdate = lastUpdatePerProvider.get(providerId);
+        if (lastUpdate != null && Duration.between(lastUpdate, now).compareTo(MIN_UPDATE_INTERVAL) < 0) {
+            log.debug("Rate-limited location update from provider {}", providerId);
+            return;
+        }
+        lastUpdatePerProvider.put(providerId, now);
+
         locationService.updateLocation(
             providerId,
             payload.getLatitude(),
@@ -47,15 +74,13 @@ public class LocationWebSocketController {
             payload.getSpeed()
         );
 
-        // Broadcast to all customers watching this provider
-        // (They subscribe to /topic/provider/{providerId}/location)
         Map<String, Object> broadcast = new HashMap<>();
         broadcast.put("providerId", providerId);
         broadcast.put("latitude", payload.getLatitude());
         broadcast.put("longitude", payload.getLongitude());
         broadcast.put("heading", payload.getHeading());
         broadcast.put("speed", payload.getSpeed());
-        broadcast.put("timestamp", LocalDateTime.now().toString());
+        broadcast.put("timestamp", now.toString());
 
         notificationService.broadcastToTopic(
             "provider/" + providerId + "/location",
@@ -74,7 +99,6 @@ public class LocationWebSocketController {
             @DestinationVariable UUID providerId,
             SimpMessageHeaderAccessor headerAccessor) {
 
-        // Get customer ID from auth
         if (headerAccessor.getUser() == null) {
             log.warn("Unauthenticated tracking request for provider {}", providerId);
             return;
@@ -82,11 +106,9 @@ public class LocationWebSocketController {
 
         String customerId = headerAccessor.getUser().getName();
 
-        // Get current location of provider
         ProviderLocation location = locationService.getProviderLocation(providerId);
 
         if (location != null) {
-            // Send initial location to customer
             Map<String, Object> response = new HashMap<>();
             response.put("providerId", providerId);
             response.put("latitude", location.getLatitude());

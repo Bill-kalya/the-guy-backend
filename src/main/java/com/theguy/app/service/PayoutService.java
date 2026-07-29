@@ -3,7 +3,10 @@ package com.theguy.app.service;
 import com.theguy.app.entity.Payout;
 import com.theguy.app.entity.Provider;
 import com.theguy.app.enums.PayoutStatus;
+import com.theguy.app.enums.VerificationLevel;
+import com.theguy.app.enums.DisputeStatus;
 import com.theguy.app.enums.WalletReferenceType;
+import com.theguy.app.repository.DisputeRepository;
 import com.theguy.app.repository.PayoutRepository;
 import com.theguy.app.repository.ProviderRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,11 +27,27 @@ public class PayoutService {
     private final WalletService walletService;
     private final LedgerService ledgerService;
     private final FinancialAuditLogService auditLogService;
+    private final DisputeRepository disputeRepository;
 
     @Transactional
     public Payout requestPayout(UUID providerId, double amount) {
         Provider provider = providerRepository.findById(providerId)
                 .orElseThrow(() -> new RuntimeException("Provider not found"));
+
+        // Withdrawal verification gate
+        if (!"ACTIVE".equals(provider.getProviderStatus())) {
+            throw new IllegalStateException("Withdrawal blocked: account is " + provider.getProviderStatus());
+        }
+
+        VerificationLevel level = provider.getVerificationLevel();
+        if (level == null || level.ordinal() < VerificationLevel.BASIC.ordinal()) {
+            throw new IllegalStateException("Withdrawal blocked: identity verification required. Current level: " + level);
+        }
+
+        long openDisputes = disputeRepository.countByStatusAndJob_Provider_Id(DisputeStatus.OPEN, providerId);
+        if (openDisputes > 0) {
+            throw new IllegalStateException("Withdrawal blocked: " + openDisputes + " open dispute(s) must be resolved first");
+        }
 
         // Create payout entity first to get the ID for reservation
         Payout payout = Payout.builder()

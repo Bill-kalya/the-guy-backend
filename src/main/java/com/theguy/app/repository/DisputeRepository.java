@@ -13,4 +13,7 @@ public interface DisputeRepository extends JpaRepository<Dispute, UUID> {
     Optional<Dispute> findByJobId(UUID jobId);
     List<Dispute> findByStatus(DisputeStatus status);
     long countByStatus(DisputeStatus status);
+    long countByStatusAndJob_Provider_Id(DisputeStatus status, UUID providerId);
+    long countByStatusAndOpenedBy_Id(DisputeStatus status, UUID userId);
+    List<Dispute> findByJob_Provider_IdAndStatus(UUID providerId, DisputeStatus status);
 }

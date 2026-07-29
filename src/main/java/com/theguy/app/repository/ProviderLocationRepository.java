@@ -111,4 +111,7 @@ public interface ProviderLocationRepository extends JpaRepository<ProviderLocati
 
     @Query("SELECT pl FROM ProviderLocation pl WHERE pl.providerId IN :providerIds")
     List<ProviderLocation> findByProviderIds(@Param("providerIds") List<UUID> providerIds);
+
+    @Query("SELECT pl.providerId FROM ProviderLocation pl WHERE pl.updatedAt < :threshold")
+    List<UUID> findStaleProviderIds(@Param("threshold") java.time.LocalDateTime threshold);
 }

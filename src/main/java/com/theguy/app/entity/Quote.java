@@ -8,11 +8,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "quotes", indexes = {
-    @Index(name = "idx_quotes_job", columnList = "job_id"),
-    @Index(name = "idx_quotes_provider", columnList = "provider_id"),
-    @Index(name = "idx_quotes_status", columnList = "status")
-})
+@Table(name = "quotes")
 @Data
 @Builder
 @NoArgsConstructor

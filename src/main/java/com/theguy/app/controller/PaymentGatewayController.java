@@ -61,12 +61,15 @@ public class PaymentGatewayController {
             metadata.put("phoneNumber", request.getOrDefault("phoneNumber", ""));
             metadata.put("description", request.getOrDefault("description", "Payment for job " + jobIdStr));
 
-            PaymentResponse response = gatewayService.initiatePayment(
+            Map<String, Object> initiationResult = gatewayService.initiatePayment(
                 jobId, customerId, providerId, amount, "KES", paymentMethod, metadata
             );
 
+            PaymentResponse response = (PaymentResponse) initiationResult.get("paymentResponse");
+
             Map<String, Object> result = new HashMap<>();
             result.put("success", response.isSuccess());
+            result.put("paymentId", initiationResult.get("paymentId"));
             result.put("checkoutRequestId", response.getTransactionId());
             result.put("message", response.getMessage());
             result.put("amount", amount.doubleValue());

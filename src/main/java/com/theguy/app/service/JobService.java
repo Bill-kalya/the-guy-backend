@@ -73,13 +73,6 @@ public class JobService {
         Job savedJob = jobRepository.save(job);
         log.info("Job created with ID: {}", savedJob.getId());
         
-        // Capture price snapshot at booking time
-        double platformFee = savedJob.getFinalPrice() != null ? savedJob.getFinalPrice() * 0.10 : 0.0;
-        double taxAmount = (savedJob.getFinalPrice() != null ? savedJob.getFinalPrice() : 0.0) * 0.16;
-        priceSnapshotService.capture(savedJob,
-            savedJob.getFinalPrice() != null ? savedJob.getFinalPrice() : 0.0,
-            platformFee, taxAmount, 0.0);
-        
         // Start matching process asynchronously
         matchingService.startMatching(savedJob);
         
@@ -124,6 +117,12 @@ public class JobService {
         }
         
         jobRepository.save(job);
+        
+        // Capture price snapshot with the actual final price
+        double finalPrice = job.getFinalPrice() != null ? job.getFinalPrice() : 0.0;
+        double platformFee = finalPrice * 0.10;
+        double taxAmount = finalPrice * 0.16;
+        priceSnapshotService.capture(job, finalPrice, platformFee, taxAmount, 0.0);
         
         log.info("Job {} accepted by provider {}", jobId, providerId);
         

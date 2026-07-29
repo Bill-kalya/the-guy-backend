@@ -49,6 +49,7 @@ public class PayoutController {
         return ResponseEntity.ok(ApiResponse.success(payouts));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/pending")
     public ResponseEntity<?> getPendingPayouts() {
         var payouts = payoutService.getPendingPayouts();

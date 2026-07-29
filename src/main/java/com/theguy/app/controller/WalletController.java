@@ -32,8 +32,9 @@ public class WalletController {
         Map<String, Object> response = new HashMap<>();
         response.put("pendingBalance", wallet.getPendingBalance());
         response.put("availableBalance", wallet.getAvailableBalance());
+        response.put("reservedBalance", wallet.getReservedBalance());
         response.put("currency", wallet.getCurrency());
-        response.put("totalBalance", wallet.getPendingBalance() + wallet.getAvailableBalance());
+        response.put("totalBalance", wallet.getPendingBalance() + wallet.getAvailableBalance() + wallet.getReservedBalance());
 
         return ResponseEntity.ok(ApiResponse.success(response));
     }

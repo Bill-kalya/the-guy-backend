@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,9 +50,9 @@ public class PaymentGatewayService {
     }
 
     @Transactional
-    public PaymentResponse initiatePayment(UUID jobId, UUID customerId, UUID providerId,
-                                            BigDecimal amount, String currency,
-                                            PaymentMethod method, Map<String, Object> metadata) {
+    public Map<String, Object> initiatePayment(UUID jobId, UUID customerId, UUID providerId,
+                                                BigDecimal amount, String currency,
+                                                PaymentMethod method, Map<String, Object> metadata) {
         PaymentProvider provider = getProvider(method);
 
         String reference = "PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
@@ -80,7 +81,10 @@ public class PaymentGatewayService {
         log.info("Payment initiated: id={}, provider={}, method={}, amount={} {}",
             payment.getId(), provider.getProviderName(), method, amount, currency);
 
-        return response;
+        return Map.of(
+            "paymentResponse", response,
+            "paymentId", payment.getId().toString()
+        );
     }
 
     @Transactional(readOnly = true)
@@ -91,13 +95,14 @@ public class PaymentGatewayService {
         PaymentProvider provider = getProvider(payment.getPaymentMethod());
         PaymentStatusResponse statusResponse = provider.getPaymentStatus(payment.getCheckoutRequestId());
 
-        return Map.of(
-            "paymentId", payment.getId(),
-            "status", payment.getStatus(),
-            "providerStatus", statusResponse.getStatus(),
-            "amount", payment.getAmount(),
-            "method", payment.getPaymentMethod()
-        );
+        Map<String, Object> result = new HashMap<>();
+        result.put("paymentId", payment.getId());
+        result.put("status", payment.getStatus());
+        result.put("providerStatus", statusResponse.getStatus());
+        result.put("amount", payment.getAmount());
+        result.put("method", payment.getPaymentMethod());
+        result.put("transactionId", payment.getTransactionReference() != null ? payment.getTransactionReference() : "");
+        return result;
     }
 
     @Transactional
@@ -168,10 +173,12 @@ public class PaymentGatewayService {
         double providerAmount = netAmount - platformFee;
         double taxAmount = platformFee * 0.16;
 
-        // Move funds from escrow to provider pending wallet
+        // Move funds from escrow to provider available wallet
         walletService.creditPending(providerId, providerAmount,
             WalletReferenceType.JOB, jobId,
             "Escrow released: provider earnings for completed job");
+        walletService.releaseToAvailable(providerId, providerAmount,
+            "Auto-released: provider earnings for completed job");
 
         // Platform revenue (net of processor fee)
         ledgerService.recordDoubleEntry(
@@ -183,6 +190,12 @@ public class PaymentGatewayService {
             AccountCode.ESCROW, AccountCode.PROVIDER_EARNINGS,
             providerAmount, "KES", "JOB_COMPLETED", jobId,
             "Provider earnings released on job completion");
+
+        // Processor fee: move from escrow to processor fee account
+        ledgerService.recordDoubleEntry(
+            AccountCode.ESCROW, AccountCode.PROCESSOR_FEE,
+            processorFee, "KES", "JOB_COMPLETED", jobId,
+            "M-Pesa processor fee (0.5%)");
 
         // Balanced tax entry: DEBIT PLATFORM_REVENUE, CREDIT TAX_LIABILITY
         ledgerService.recordDoubleEntry(

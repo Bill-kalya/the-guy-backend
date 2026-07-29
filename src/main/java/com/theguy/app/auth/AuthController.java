@@ -258,7 +258,13 @@ public class AuthController {
 
                 String userId = jwtUtil.extractUserId(token);
                 if (userId != null && jwtUtil.validateToken(token, userId)) {
-                    Map<String, Object> claims = jwtUtil.getClaimsFromToken(token);
+                    User user = userRepository.findByEmail(userId)
+                        .orElseThrow(() -> new BadCredentialsException("User not found"));
+
+                    Map<String, Object> claims = new HashMap<>();
+                    claims.put("role", user.getRole().name());
+                    claims.put("email", user.getEmail());
+
                     String newAccessToken = jwtUtil.generateToken(userId, claims);
                     return ResponseEntity.ok(Map.of(
                         "accessToken", newAccessToken,

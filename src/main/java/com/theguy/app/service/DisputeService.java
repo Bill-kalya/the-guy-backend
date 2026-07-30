@@ -6,6 +6,7 @@ import com.theguy.app.entity.User;
 import com.theguy.app.enums.DisputeStatus;
 import com.theguy.app.enums.FinancialAction;
 import com.theguy.app.enums.AuditActorType;
+import com.theguy.app.enums.JobStatus;
 import com.theguy.app.repository.DisputeRepository;
 import com.theguy.app.repository.JobRepository;
 import com.theguy.app.repository.UserRepository;
@@ -45,6 +46,9 @@ public class DisputeService {
                 .reason(reason)
                 .status(DisputeStatus.OPEN)
                 .build();
+
+        job.setStatus(JobStatus.DISPUTED);
+        jobRepository.save(job);
 
         Dispute saved = disputeRepository.save(dispute);
         log.info("Dispute opened: jobId={}, userId={}, reason={}", jobId, userId, reason);

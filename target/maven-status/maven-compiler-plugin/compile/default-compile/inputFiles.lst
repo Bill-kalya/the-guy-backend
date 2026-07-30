@@ -4,6 +4,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\QuoteService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Category.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\AdminUserService.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\CompleteJobDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\InsightDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ReviewService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\QuoteController.java
@@ -15,6 +16,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\RevenueTrendDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\GoalDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\ProviderAchievementRepository.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\RejectCompletionDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ProviderProfileCompletionService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Service.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\TrustSafetyService.java

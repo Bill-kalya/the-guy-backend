@@ -5,6 +5,7 @@ import com.theguy.app.enums.Urgency;
 import lombok.Builder;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -23,7 +24,12 @@ public class JobResponseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime acceptedAt;
     private LocalDateTime completedAt;
-    
+    private String completionNotes;
+    private List<String> completionPhotos;
+    private Double completionLatitude;
+    private Double completionLongitude;
+    private LocalDateTime confirmationDeadline;
+
     @Data
     @Builder
     public static class ProviderSummaryDTO {
@@ -33,7 +39,7 @@ public class JobResponseDTO {
         private Integer jobsCompleted;
         private String verificationLevel;
     }
-    
+
     @Data
     @Builder
     public static class LocationDTO {

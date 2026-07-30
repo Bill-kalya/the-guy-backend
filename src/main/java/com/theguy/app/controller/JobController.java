@@ -1,8 +1,10 @@
 package com.theguy.app.controller;
 
 import com.theguy.app.dto.ApiResponse;
+import com.theguy.app.dto.CompleteJobDTO;
 import com.theguy.app.dto.JobRequestDTO;
 import com.theguy.app.dto.JobResponseDTO;
+import com.theguy.app.dto.RejectCompletionDTO;
 import com.theguy.app.entity.Job;
 import com.theguy.app.entity.User;
 import com.theguy.app.enums.JobStatus;
@@ -86,9 +88,33 @@ public class JobController {
     }
 
     @PostMapping("/{jobId}/complete")
-    public ResponseEntity<?> complete(@PathVariable UUID jobId) {
-        jobService.completeJob(jobId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> complete(@PathVariable UUID jobId,
+                                       @Valid @RequestBody CompleteJobDTO dto,
+                                       Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        var provider = providerRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+        jobService.completeJob(jobId, provider.getId(), dto);
+        return ResponseEntity.ok(ApiResponse.success("Job marked complete, awaiting customer confirmation", null));
+    }
+
+    @PostMapping("/{jobId}/confirm-completion")
+    public ResponseEntity<?> confirmCompletion(@PathVariable UUID jobId, Authentication authentication) {
+        User customer = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        jobService.confirmCompletion(jobId, customer.getId());
+        return ResponseEntity.ok(ApiResponse.success("Completion confirmed, escrow released", null));
+    }
+
+    @PostMapping("/{jobId}/reject-completion")
+    public ResponseEntity<?> rejectCompletion(@PathVariable UUID jobId,
+                                               @Valid @RequestBody RejectCompletionDTO dto,
+                                               Authentication authentication) {
+        User customer = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        jobService.rejectCompletion(jobId, customer.getId(), dto);
+        return ResponseEntity.ok(ApiResponse.success("Completion rejected, dispute opened", null));
     }
 
     @GetMapping("/stats")

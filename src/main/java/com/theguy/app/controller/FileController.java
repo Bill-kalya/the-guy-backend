@@ -162,8 +162,9 @@ public class FileController {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponse.error("You don't have permission to delete this file"));
                 }
-        } catch (Exception e) {
-            log.warn("Could not verify ownership for user: {}", email);
+            } catch (Exception e) {
+                log.warn("Could not verify ownership for user: {}", email);
+            }
         }
 
         // Soft-delete in database if it's a portfolio or verification image

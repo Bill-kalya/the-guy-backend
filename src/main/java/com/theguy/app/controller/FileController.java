@@ -19,6 +19,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -102,10 +105,12 @@ public class FileController {
             String publicId = folder + "/" + UUID.randomUUID().toString().substring(0, 8);
 
             String toSign = "folder=theguy/" + folder + "&public_id=" + publicId + "&timestamp=" + timestamp;
-            String signature = DigestUtils.md5DigestAsHex((toSign + apiSecret).getBytes());
+            MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+            byte[] digest = sha1.digest((toSign + apiSecret).getBytes(StandardCharsets.UTF_8));
+            String signature = HexFormat.of().formatHex(digest);
 
             log.info("String to sign = {}", toSign);
-            log.info("Signature = {}", signature);
+            log.info("Signature (SHA-1) = {}", signature);
 
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();

@@ -5,6 +5,8 @@ import com.theguy.app.entity.Provider;
 import com.theguy.app.entity.ProviderLocation;
 import com.theguy.app.repository.ProviderLocationRepository;
 import com.theguy.app.repository.ProviderRepository;
+import com.theguy.app.repository.JobRepository;
+import com.theguy.app.enums.JobStatus;
 import com.theguy.app.utils.LocationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ public class LocationService {
 
     private final ProviderLocationRepository locationRepository;
     private final ProviderRepository providerRepository;
+    private final JobRepository jobRepository;
 
     @Transactional
     public void updateLocation(UUID providerId, double latitude, double longitude, Double heading, Double speed) {
@@ -171,12 +174,23 @@ public class LocationService {
         if (staleIds.isEmpty()) return;
 
         List<Provider> staleProviders = providerRepository.findAllById(staleIds);
-        for (Provider provider : staleProviders) {
+        List<UUID> activeJobProviderIds = jobRepository.findProviderIdsWithActiveJobs(
+                staleIds,
+                java.util.List.of(JobStatus.REQUESTED, JobStatus.MATCHING, JobStatus.ASSIGNED,
+                        JobStatus.ON_THE_WAY, JobStatus.ARRIVED, JobStatus.IN_PROGRESS,
+                        JobStatus.AWAITING_CUSTOMER_CONFIRMATION));
+
+        List<Provider> toOffline = staleProviders.stream()
+                .filter(p -> activeJobProviderIds.contains(p.getId()))
+                .collect(Collectors.toList());
+
+        for (Provider provider : toOffline) {
             provider.setOnline(false);
             provider.setLastActiveAt(LocalDateTime.now());
         }
-        providerRepository.saveAll(staleProviders);
+        providerRepository.saveAll(toOffline);
 
-        log.info("Marked {} providers offline due to stale location (>60s)", staleIds.size());
+        log.info("Marked {} providers offline due to stale location during active jobs ({} idle providers kept online)",
+                toOffline.size(), staleProviders.size() - toOffline.size());
     }
 }

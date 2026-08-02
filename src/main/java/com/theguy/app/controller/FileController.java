@@ -95,11 +95,17 @@ public class FileController {
         }
 
         try {
+            log.info("Cloudinary upload attempt: cloud={} apiKey={} apiKeyLength={} apiSecretLength={}",
+                cloudName, apiKey, apiKey.length(), apiSecret.length());
+
             String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
             String publicId = folder + "/" + UUID.randomUUID().toString().substring(0, 8);
 
-            String toSign = "folder=theguy/" + folder + "&public_id=" + publicId + "&timestamp=" + timestamp + apiSecret;
-            String signature = DigestUtils.md5DigestAsHex(toSign.getBytes());
+            String toSign = "folder=theguy/" + folder + "&public_id=" + publicId + "&timestamp=" + timestamp;
+            String signature = DigestUtils.md5DigestAsHex((toSign + apiSecret).getBytes());
+
+            log.info("String to sign = {}", toSign);
+            log.info("Signature = {}", signature);
 
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();

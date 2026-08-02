@@ -1,5 +1,6 @@
 package com.theguy.app.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum VerificationDocumentType {
@@ -17,5 +18,19 @@ public enum VerificationDocumentType {
     @JsonValue
     public String getDisplayName() {
         return displayName;
+    }
+
+    @JsonCreator
+    public static VerificationDocumentType fromString(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim().toUpperCase().replace(' ', '_');
+        for (VerificationDocumentType type : values()) {
+            if (type.name().equals(normalized)) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Unknown document type: " + value);
     }
 }

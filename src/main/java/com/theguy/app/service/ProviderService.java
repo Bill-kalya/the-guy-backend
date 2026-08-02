@@ -77,7 +77,7 @@ public class ProviderService {
             for (ProviderRegistrationDTO.VerificationDocDTO docDto : dto.getVerificationDocuments()) {
                 VerificationDocument doc = new VerificationDocument();
                 doc.setProvider(savedProvider);
-                doc.setDocumentType(VerificationDocumentType.valueOf(docDto.getDocumentType()));
+                doc.setDocumentType(VerificationDocumentType.fromString(docDto.getDocumentType()));
                 doc.setImageUrl(docDto.getImageUrl());
                 doc.setPublicId(docDto.getPublicId());
                 doc.setStatus(VerificationDocument.VerificationDocumentStatus.PENDING);

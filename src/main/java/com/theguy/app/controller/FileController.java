@@ -98,9 +98,6 @@ public class FileController {
         }
 
         try {
-            log.info("Cloudinary upload attempt: cloud={} apiKey={} apiKeyLength={} apiSecretLength={}",
-                cloudName, apiKey, apiKey.length(), apiSecret.length());
-
             String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
             String publicId = folder + "/" + UUID.randomUUID().toString().substring(0, 8);
 
@@ -108,9 +105,6 @@ public class FileController {
             MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
             byte[] digest = sha1.digest((toSign + apiSecret).getBytes(StandardCharsets.UTF_8));
             String signature = HexFormat.of().formatHex(digest);
-
-            log.info("String to sign = {}", toSign);
-            log.info("Signature (SHA-1) = {}", signature);
 
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();

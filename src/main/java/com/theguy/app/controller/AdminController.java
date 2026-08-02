@@ -105,7 +105,7 @@ public class AdminController {
             @RequestParam(required = false) UUID adminId,
             @RequestParam(required = false) String actionType
     ) {
-        Page<AdminAction> logs = adminActionService.getAuditLogs(adminId, actionType, PageRequest.of(page, size, Sort.by("createdAt").descending()));
+        Page<AdminAction> logs = adminActionService.getAuditLogs(adminId, actionType, PageRequest.of(page, size, Sort.by("created_at").descending()));
         return ResponseEntity.ok(ApiResponse.success(logs));
     }
 

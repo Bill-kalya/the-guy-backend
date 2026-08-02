@@ -70,11 +70,11 @@ public class AdminProviderService {
                             || ("online".equalsIgnoreCase(status) && p.isOnline())
                             || ("offline".equalsIgnoreCase(status) && !p.isOnline())
                             || ("active".equalsIgnoreCase(status) && p.getProviderStatus() != null
-                            && p.getProviderStatus().name().equalsIgnoreCase("ACTIVE"))
+                            && p.getProviderStatus().equalsIgnoreCase("ACTIVE"))
                             || ("suspended".equalsIgnoreCase(status) && p.getProviderStatus() != null
-                            && p.getProviderStatus().name().equalsIgnoreCase("SUSPENDED"))
+                            && p.getProviderStatus().equalsIgnoreCase("SUSPENDED"))
                             || ("banned".equalsIgnoreCase(status) && p.getProviderStatus() != null
-                            && p.getProviderStatus().name().equalsIgnoreCase("BANNED")))
+                            && p.getProviderStatus().equalsIgnoreCase("BANNED")))
                     .filter(p -> minRating == null || p.getRatingAvg() >= minRating)
                     .filter(p -> search == null || search.isBlank()
                             || (p.getUser() != null && (

@@ -131,6 +131,13 @@ public class FileController {
                 log.error("Cloudinary upload failed: {}", response.getBody());
                 return ResponseEntity.internalServerError().body(ApiResponse.error("Upload failed"));
             }
+        } catch (HttpClientErrorException e) {
+            log.error("Cloudinary rejected upload (HTTP {}) for cloud={} apiKey={}...{} ({} chars): body={}",
+                e.getStatusCode(), cloudName,
+                apiKey.substring(0, Math.min(4, apiKey.length())),
+                apiKey.length() > 4 ? apiKey.substring(apiKey.length() - 4) : "",
+                apiKey.length(), e.getResponseBodyAsString());
+            return ResponseEntity.internalServerError().body(ApiResponse.error("Upload failed: " + e.getResponseBodyAsString()));
         } catch (Exception e) {
             log.error("Cloudinary upload failed", e);
             return ResponseEntity.internalServerError().body(ApiResponse.error("Upload failed: " + e.getMessage()));
@@ -155,12 +162,8 @@ public class FileController {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponse.error("You don't have permission to delete this file"));
                 }
-        } catch (HttpClientErrorException e) {
-            log.error("Cloudinary rejected upload (HTTP {}): {}", e.getStatusCode(), e.getResponseBodyAsString());
-            return ResponseEntity.internalServerError().body(ApiResponse.error("Upload failed: " + e.getResponseBodyAsString()));
         } catch (Exception e) {
-                log.warn("Could not verify ownership for user: {}", email);
-            }
+            log.warn("Could not verify ownership for user: {}", email);
         }
 
         // Soft-delete in database if it's a portfolio or verification image

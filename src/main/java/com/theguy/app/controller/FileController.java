@@ -132,11 +132,11 @@ public class FileController {
                 return ResponseEntity.internalServerError().body(ApiResponse.error("Upload failed"));
             }
         } catch (HttpClientErrorException e) {
-            log.error("Cloudinary rejected upload (HTTP {}) for cloud={} apiKey={}...{} ({} chars): body={}",
+            log.error("Cloudinary rejected upload (HTTP {}) for cloud={} apiKey={}...{} ({} chars) apiSecretLength={}: body={}",
                 e.getStatusCode(), cloudName,
                 apiKey.substring(0, Math.min(4, apiKey.length())),
                 apiKey.length() > 4 ? apiKey.substring(apiKey.length() - 4) : "",
-                apiKey.length(), e.getResponseBodyAsString());
+                apiKey.length(), apiSecret.length(), e.getResponseBodyAsString());
             return ResponseEntity.internalServerError().body(ApiResponse.error("Upload failed: " + e.getResponseBodyAsString()));
         } catch (Exception e) {
             log.error("Cloudinary upload failed", e);

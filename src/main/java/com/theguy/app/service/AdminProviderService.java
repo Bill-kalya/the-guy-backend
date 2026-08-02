@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -58,15 +59,22 @@ public class AdminProviderService {
     public Page<ProviderListItemDTO> getProviders(String verification, String status, Double minRating,
                                                    String search, int page, int size) {
         try {
-            PageRequest pageRequest = PageRequest.of(page, size);
-            List<Provider> allProviders = providerRepository.findAll();
+            PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+            List<Provider> allProviders = providerRepository.findAll(pageRequest.getSort());
 
             List<ProviderListItemDTO> filtered = allProviders.stream()
                     .filter(p -> verification == null || verification.isBlank()
-                            || p.getVerificationLevel().name().equalsIgnoreCase(verification))
+                            || (p.getVerificationLevel() != null
+                            && p.getVerificationLevel().name().equalsIgnoreCase(verification)))
                     .filter(p -> status == null || status.isBlank()
                             || ("online".equalsIgnoreCase(status) && p.isOnline())
-                            || ("offline".equalsIgnoreCase(status) && !p.isOnline()))
+                            || ("offline".equalsIgnoreCase(status) && !p.isOnline())
+                            || ("active".equalsIgnoreCase(status) && p.getProviderStatus() != null
+                            && p.getProviderStatus().name().equalsIgnoreCase("ACTIVE"))
+                            || ("suspended".equalsIgnoreCase(status) && p.getProviderStatus() != null
+                            && p.getProviderStatus().name().equalsIgnoreCase("SUSPENDED"))
+                            || ("banned".equalsIgnoreCase(status) && p.getProviderStatus() != null
+                            && p.getProviderStatus().name().equalsIgnoreCase("BANNED")))
                     .filter(p -> minRating == null || p.getRatingAvg() >= minRating)
                     .filter(p -> search == null || search.isBlank()
                             || (p.getUser() != null && (

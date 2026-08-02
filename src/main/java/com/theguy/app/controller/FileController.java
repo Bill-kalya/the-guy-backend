@@ -15,6 +15,7 @@ import org.springframework.util.DigestUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -83,8 +84,13 @@ public class FileController {
                 "File too large. Max " + (maxSize / 1024 / 1024) + "MB for " + folder));
         }
 
-        if (cloudName == null || cloudName.isBlank()) {
-            log.error("File upload failed: Cloudinary not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET env vars.");
+        if (cloudName == null || cloudName.isBlank()
+                || apiKey == null || apiKey.isBlank()
+                || apiSecret == null || apiSecret.isBlank()) {
+            log.error("File upload failed: Cloudinary not configured. cloudName={}, apiKey={}, apiSecret={}",
+                cloudName == null || cloudName.isBlank() ? "MISSING" : "set",
+                apiKey == null || apiKey.isBlank() ? "MISSING" : "set",
+                apiSecret == null || apiSecret.isBlank() ? "MISSING" : "set");
             return ResponseEntity.internalServerError().body(ApiResponse.error("File storage not configured. Please contact support."));
         }
 
@@ -149,7 +155,10 @@ public class FileController {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponse.error("You don't have permission to delete this file"));
                 }
-            } catch (Exception e) {
+        } catch (HttpClientErrorException e) {
+            log.error("Cloudinary rejected upload (HTTP {}): {}", e.getStatusCode(), e.getResponseBodyAsString());
+            return ResponseEntity.internalServerError().body(ApiResponse.error("Upload failed: " + e.getResponseBodyAsString()));
+        } catch (Exception e) {
                 log.warn("Could not verify ownership for user: {}", email);
             }
         }

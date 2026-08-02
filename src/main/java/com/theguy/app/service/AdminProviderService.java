@@ -210,6 +210,8 @@ public class AdminProviderService {
                 .profileImageUrl(provider.getProfileImageUrl())
                 .verificationLevel(provider.getVerificationLevel() != null
                         ? provider.getVerificationLevel().name() : "NONE")
+                .providerStatus(provider.getProviderStatus() != null
+                        ? provider.getProviderStatus() : "ACTIVE")
                 .isOnline(provider.isOnline())
                 .ratingAvg(provider.getRatingAvg())
                 .totalReviews(provider.getTotalReviews())

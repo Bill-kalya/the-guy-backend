@@ -17,6 +17,7 @@ public class ProviderListItemDTO {
     private String bio;
     private String profileImageUrl;
     private String verificationLevel;
+    private String providerStatus;
     private boolean isOnline;
     private Double ratingAvg;
     private Integer totalReviews;

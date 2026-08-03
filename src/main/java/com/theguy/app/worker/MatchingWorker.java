@@ -89,12 +89,13 @@ public class MatchingWorker {
 
         double distanceKm = 0.0;
         if (job.getLatitude() != null && job.getLongitude() != null) {
-            locationRepository.findByProviderId(providerId).ifPresent(pl -> {
-                double distance = LocationUtils.calculateDistance(
-                    pl.getLatitude(), pl.getLongitude(),
-                    job.getLatitude(), job.getLongitude());
-                distanceKm = distance / 1000.0;
-            });
+            java.util.Optional<ProviderLocation> location =
+                locationRepository.findByProviderId(providerId);
+            if (location.isPresent()) {
+                distanceKm = LocationUtils.calculateDistance(
+                    location.get().getLatitude(), location.get().getLongitude(),
+                    job.getLatitude(), job.getLongitude()) / 1000.0;
+            }
         }
 
         String customerName = job.getCustomer() != null && job.getCustomer().getFullName() != null

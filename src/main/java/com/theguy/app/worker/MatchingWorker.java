@@ -3,12 +3,15 @@ package com.theguy.app.worker;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theguy.app.entity.Job;
 import com.theguy.app.entity.JobRequest;
+import com.theguy.app.entity.ProviderLocation;
 import com.theguy.app.enums.JobRequestStatus;
 import com.theguy.app.enums.JobStatus;
 import com.theguy.app.repository.JobRepository;
 import com.theguy.app.repository.JobRequestRepository;
+import com.theguy.app.repository.ProviderLocationRepository;
 import com.theguy.app.service.NotificationService;
 import com.theguy.app.service.QueueService;
+import com.theguy.app.utils.LocationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -16,6 +19,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,6 +34,7 @@ public class MatchingWorker {
     private final ObjectMapper objectMapper;
     private final JobRepository jobRepository;
     private final JobRequestRepository jobRequestRepository;
+    private final ProviderLocationRepository locationRepository;
     private final NotificationService notificationService;
     
     @Scheduled(fixedDelay = 2000)
@@ -48,33 +53,73 @@ public class MatchingWorker {
     }
     
     public void dispatchToProviders(UUID jobId, List<UUID> providerIds) {
-        Job job = jobRepository.findById(jobId).orElse(null);
+        // Fetch with customer so the notification can include customer details.
+        Job job = jobRepository.findByIdWithDetails(jobId).orElse(null);
         if (job == null || job.getStatus() != JobStatus.MATCHING) return;
-        
+
         // Send to top provider first (sequential for now)
         for (UUID providerId : providerIds) {
+            Job current = jobRepository.findByIdWithDetails(jobId).orElse(null);
+            if (current == null || current.getStatus() != JobStatus.MATCHING) break;
+
             JobRequest request = new JobRequest();
             request.setJobId(jobId);
             request.setProviderId(providerId);
             request.setStatus(JobRequestStatus.PENDING);
             request.setSentAt(LocalDateTime.now());
             jobRequestRepository.save(request);
-            
+
             notificationService.sendJobToProvider(
                 providerId.toString(),
                 Map.of(
-                    "jobId", jobId,
-                    "description", job.getDescription(),
-                    "priceEstimateMin", job.getPriceEstimateMin(),
-                    "priceEstimateMax", job.getPriceEstimateMax(),
-                    "urgency", job.getUrgency()
+                    "type", "NEW_JOB_REQUEST",
+                    "job", buildJobPayload(current, providerId)
                 )
             );
-            
-            if (job.getStatus() == JobStatus.ASSIGNED) {
-                break;
-            }
         }
+    }
+
+    private Map<String, Object> buildJobPayload(Job job, UUID providerId) {
+        double price = 0.0;
+        if (job.getPriceEstimateMin() != null && job.getPriceEstimateMax() != null) {
+            price = (job.getPriceEstimateMin() + job.getPriceEstimateMax()) / 2;
+        } else if (job.getPriceEstimateMin() != null) {
+            price = job.getPriceEstimateMin();
+        }
+
+        double distanceKm = 0.0;
+        if (job.getLatitude() != null && job.getLongitude() != null) {
+            locationRepository.findByProviderId(providerId).ifPresent(pl -> {
+                double distance = LocationUtils.calculateDistance(
+                    pl.getLatitude(), pl.getLongitude(),
+                    job.getLatitude(), job.getLongitude());
+                distanceKm = distance / 1000.0;
+            });
+        }
+
+        String customerName = job.getCustomer() != null && job.getCustomer().getFullName() != null
+            ? job.getCustomer().getFullName() : "Customer";
+        String customerPhone = job.getCustomer() != null && job.getCustomer().getPhoneNumber() != null
+            ? job.getCustomer().getPhoneNumber() : "";
+        String customerId = job.getCustomer() != null
+            ? job.getCustomer().getId().toString() : "";
+
+        Map<String, Object> jobPayload = new HashMap<>();
+        jobPayload.put("id", job.getId());
+        jobPayload.put("customerId", customerId);
+        jobPayload.put("customerName", customerName);
+        jobPayload.put("customerPhone", customerPhone);
+        jobPayload.put("category", job.getServiceCategory());
+        jobPayload.put("description", job.getDescription());
+        jobPayload.put("distance", distanceKm);
+        jobPayload.put("price", price);
+        jobPayload.put("status", "matching");
+        jobPayload.put("requestedAt", job.getCreatedAt() != null
+            ? job.getCreatedAt().toString() : LocalDateTime.now().toString());
+        jobPayload.put("pickupLat", job.getLatitude());
+        jobPayload.put("pickupLng", job.getLongitude());
+        jobPayload.put("hasResponded", false);
+        return jobPayload;
     }
 
     /**

@@ -16,6 +16,7 @@ import com.theguy.app.enums.Urgency;
 import com.theguy.app.repository.DisputeRepository;
 import com.theguy.app.repository.JobRepository;
 import com.theguy.app.repository.JobRequestRepository;
+import com.theguy.app.repository.ProviderLocationRepository;
 import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.UserRepository;
 import com.theguy.app.repository.PaymentRepository;
@@ -41,6 +42,8 @@ public class JobService {
     private final UserRepository userRepository;
     private final ProviderRepository providerRepository;
     private final JobRequestRepository jobRequestRepository;
+    private final ProviderLocationRepository locationRepository;
+    private final ProviderStatisticsService providerStatisticsService;
     private final PricingService pricingService;
     private final MatchingService matchingService;
     private final NotificationService notificationService;
@@ -138,7 +141,8 @@ public class JobService {
 
         notificationService.notifyCustomer(
             job.getCustomer().getId().toString(),
-            Map.of("type", "JOB_ACCEPTED", "jobId", jobId, "providerId", providerId)
+            Map.of("type", "JOB_ACCEPTED", "jobId", jobId, "providerId", providerId,
+                   "provider", buildProviderSummary(job, provider))
         );
 
         notificationService.notifyProvider(
@@ -480,6 +484,36 @@ public class JobService {
                 jobRequestRepository.save(request);
             }
         }
+    }
+
+    /** Provider summary for the customer-facing JOB_ACCEPTED notification. */
+    private Map<String, Object> buildProviderSummary(Job job, Provider provider) {
+        double sqs = providerStatisticsService.getStatistics(provider.getId())
+            .map(com.theguy.app.entity.ProviderStatistics::getSqs)
+            .orElse(0.0);
+
+        double distanceKm = 0.0;
+        if (job.getLatitude() != null && job.getLongitude() != null) {
+            distanceKm = locationRepository.findByProviderId(provider.getId())
+                .map(pl -> com.theguy.app.utils.LocationUtils.calculateDistance(
+                    pl.getLatitude(), pl.getLongitude(),
+                    job.getLatitude(), job.getLongitude()) / 1000.0)
+                .orElse(0.0);
+        }
+
+        double price = job.getFinalPrice() != null ? job.getFinalPrice()
+            : (job.getPriceEstimateMin() != null ? job.getPriceEstimateMin() : 0.0);
+
+        Map<String, Object> summary = new java.util.HashMap<>();
+        summary.put("id", provider.getId());
+        summary.put("name", provider.getUser() != null ? provider.getUser().getFullName() : "Provider");
+        summary.put("avatar", provider.getProfileImageUrl());
+        summary.put("rating", provider.getRatingAvg());
+        summary.put("reviews", provider.getTotalReviews());
+        summary.put("serviceQualityScore", sqs);
+        summary.put("distance", distanceKm);
+        summary.put("price", price);
+        return summary;
     }
 
     @Transactional(readOnly = true)

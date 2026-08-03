@@ -43,6 +43,11 @@ public class SearchService {
             int page,
             int size) {
 
+        if (lat == 0.0 && lng == 0.0) {
+            lat = -1.286389;
+            lng = 36.817223;
+        }
+
         String normalizedQuery = normalizeQuery(query);
         List<String> categories = resolveCategories(normalizedQuery);
 

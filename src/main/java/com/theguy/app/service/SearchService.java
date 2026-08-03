@@ -73,7 +73,7 @@ public class SearchService {
 
         List<SearchProviderItem> ranked = providers.stream()
             .filter(provider -> provider.getCategoryId() != null
-                && categories.contains(normalizeQuery(provider.getCategoryId())))
+                && categories.stream().anyMatch(c -> c.equalsIgnoreCase(provider.getCategoryId())))
             .map(provider -> {
                 ProviderLocation location = locations.stream()
                     .filter(item -> item.getProviderId().equals(provider.getId()))

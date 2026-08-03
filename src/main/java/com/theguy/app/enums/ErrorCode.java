@@ -15,6 +15,7 @@ public enum ErrorCode {
     PASSWORD_WEAK("PASSWORD_WEAK", "Password does not meet requirements"),
     EMAIL_INVALID("EMAIL_INVALID", "Please enter a valid email address"),
     PHONE_INVALID("PHONE_INVALID", "Please enter a valid phone number"),
+    LOCATION_REQUIRED("LOCATION_REQUIRED", "Location is required to find providers near you"),
     
     // Provider
     PROVIDER_OFFLINE("PROVIDER_OFFLINE", "This provider is currently unavailable"),

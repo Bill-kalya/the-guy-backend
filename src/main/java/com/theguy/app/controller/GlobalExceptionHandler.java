@@ -181,6 +181,7 @@ public class GlobalExceptionHandler {
         if (message.contains("Provider profile not completed")) return ErrorCode.PROVIDER_PROFILE_MISSING;
         if (message.contains("Provider not found")) return ErrorCode.NOT_FOUND;
         if (message.toLowerCase().contains("provider offline") || message.toLowerCase().contains("provider is currently unavailable")) return ErrorCode.PROVIDER_OFFLINE;
+        if (message.toLowerCase().contains("location required")) return ErrorCode.LOCATION_REQUIRED;
         if (message.contains("locked")) return ErrorCode.ACCOUNT_LOCKED;
         if (message.contains("disabled") || message.contains("suspended")) return ErrorCode.ACCOUNT_SUSPENDED;
         if (message.contains("OTP") || message.contains("otp") || message.contains("Verification code")) {

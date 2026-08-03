@@ -24,6 +24,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class MatchingWorker {
+    private static final int RESPONSE_WINDOW_SECONDS = 45;
+
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
     private final JobRepository jobRepository;
@@ -73,13 +75,48 @@ public class MatchingWorker {
                 break;
             }
         }
-        
-        // If still no one accepted, mark as failed
-        if (job.getStatus() == JobStatus.MATCHING) {
-            job.setStatus(JobStatus.CANCELLED);
-            jobRepository.save(job);
-            notificationService.notifyCustomer(job.getCustomer().getId().toString(),
-                Map.of("type", "NO_PROVIDER_ACCEPTED", "jobId", jobId));
+    }
+
+    /**
+     * Cancels matching jobs where no provider responded within the response window.
+     * The window is measured from the most recent dispatch (JobRequest.sentAt),
+     * so re-dispatches after a decline get a fresh window.
+     */
+    @Scheduled(fixedDelay = 10_000)
+    @Transactional
+    public void expireTimedOutDispatches() {
+        LocalDateTime cutoff = LocalDateTime.now().minusSeconds(RESPONSE_WINDOW_SECONDS);
+        List<JobRequest> pending = jobRequestRepository.findByStatusAndSentAtBefore(
+            JobRequestStatus.PENDING, cutoff);
+
+        for (JobRequest stale : pending) {
+            try {
+                Job job = jobRepository.findById(stale.getJobId()).orElse(null);
+                if (job == null || job.getStatus() != JobStatus.MATCHING) continue;
+
+                log.info("No provider responded to job {} within {}s — cancelling",
+                    job.getId(), RESPONSE_WINDOW_SECONDS);
+
+                job.setStatus(JobStatus.CANCELLED);
+                jobRepository.save(job);
+
+                expirePendingRequests(job.getId());
+
+                notificationService.notifyCustomer(job.getCustomer().getId().toString(),
+                    Map.of("type", "NO_PROVIDER_ACCEPTED", "jobId", job.getId()));
+            } catch (Exception e) {
+                log.warn("Failed to expire dispatch for job {}: {}", stale.getJobId(), e.getMessage());
+            }
+        }
+    }
+
+    private void expirePendingRequests(UUID jobId) {
+        for (JobRequest request : jobRequestRepository.findByJobId(jobId)) {
+            if (request.getStatus() == JobRequestStatus.PENDING) {
+                request.setStatus(JobRequestStatus.EXPIRED);
+                request.setRespondedAt(LocalDateTime.now());
+                jobRequestRepository.save(request);
+            }
         }
     }
 }

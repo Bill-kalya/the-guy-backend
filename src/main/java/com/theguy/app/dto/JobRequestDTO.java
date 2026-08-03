@@ -4,6 +4,7 @@ import com.theguy.app.enums.Urgency;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 public class JobRequestDTO {
@@ -21,6 +22,9 @@ public class JobRequestDTO {
     
     @NotNull(message = "Location is required")
     private Location location;
+
+    /** Optional: request a specific provider instead of broadcast matching. */
+    private UUID providerId;
     
     @Data
     public static class Location {

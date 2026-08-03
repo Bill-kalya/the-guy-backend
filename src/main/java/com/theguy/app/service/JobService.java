@@ -6,13 +6,16 @@ import com.theguy.app.dto.JobResponseDTO;
 import com.theguy.app.dto.RejectCompletionDTO;
 import com.theguy.app.entity.Dispute;
 import com.theguy.app.entity.Job;
+import com.theguy.app.entity.JobRequest;
 import com.theguy.app.entity.Provider;
 import com.theguy.app.entity.User;
 import com.theguy.app.enums.DisputeStatus;
+import com.theguy.app.enums.JobRequestStatus;
 import com.theguy.app.enums.JobStatus;
 import com.theguy.app.enums.Urgency;
 import com.theguy.app.repository.DisputeRepository;
 import com.theguy.app.repository.JobRepository;
+import com.theguy.app.repository.JobRequestRepository;
 import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.UserRepository;
 import com.theguy.app.repository.PaymentRepository;
@@ -37,6 +40,7 @@ public class JobService {
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
     private final ProviderRepository providerRepository;
+    private final JobRequestRepository jobRequestRepository;
     private final PricingService pricingService;
     private final MatchingService matchingService;
     private final NotificationService notificationService;
@@ -80,8 +84,8 @@ public class JobService {
         Job savedJob = jobRepository.save(job);
         log.info("Job created with ID: {}", savedJob.getId());
 
-        // Start matching process asynchronously
-        matchingService.startMatching(savedJob);
+        // Start matching process asynchronously — targeted when a provider is specified
+        matchingService.startMatching(savedJob, dto.getProviderId());
 
         // Notify customer
         notificationService.notifyCustomer(
@@ -121,6 +125,9 @@ public class JobService {
         }
 
         jobRepository.save(job);
+
+        // Expire requests still pending for other providers — this provider won
+        expirePendingRequests(jobId, providerId);
 
         double finalPrice = job.getFinalPrice() != null ? job.getFinalPrice() : 0.0;
         double platformFee = finalPrice * 0.10;
@@ -442,16 +449,37 @@ public class JobService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 
-        if (job.getStatus() != JobStatus.ASSIGNED && job.getStatus() != JobStatus.AWAITING_CUSTOMER_CONFIRMATION) {
-            throw new IllegalStateException("Job must be assigned or awaiting confirmation before declining");
+        if (job.getStatus() != JobStatus.MATCHING
+                && job.getStatus() != JobStatus.REQUESTED
+                && job.getStatus() != JobStatus.ASSIGNED) {
+            throw new IllegalStateException("Job must be matching, requested, or assigned before declining");
         }
 
+        JobStatus previousStatus = job.getStatus();
         job.setStatus(JobStatus.REQUESTED);
         job.setProvider(null);
         job.setAcceptedAt(null);
         jobRepository.save(job);
 
         log.info("Job {} declined, returned to available pool", jobId);
+
+        // Re-dispatch to other nearby providers (broadcast fallback). Providers who
+        // already declined are excluded, so a targeted request naturally falls back
+        // to the next best available provider.
+        if (previousStatus == JobStatus.MATCHING || previousStatus == JobStatus.REQUESTED) {
+            matchingService.startMatching(job, null);
+        }
+    }
+
+    private void expirePendingRequests(UUID jobId, UUID winningProviderId) {
+        for (JobRequest request : jobRequestRepository.findByJobId(jobId)) {
+            if (request.getStatus() == JobRequestStatus.PENDING
+                    && !request.getProviderId().equals(winningProviderId)) {
+                request.setStatus(JobRequestStatus.EXPIRED);
+                request.setRespondedAt(LocalDateTime.now());
+                jobRequestRepository.save(request);
+            }
+        }
     }
 
     @Transactional(readOnly = true)

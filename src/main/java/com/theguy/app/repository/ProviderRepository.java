@@ -19,6 +19,8 @@ public interface ProviderRepository extends JpaRepository<Provider, UUID> {
 
     List<Provider> findByIdInAndCategoryId(List<UUID> providerIds, String categoryId);
 
+    List<Provider> findByIdInAndCategoryIdIgnoreCase(List<UUID> providerIds, String categoryId);
+
     @Query("SELECT DISTINCT p FROM Provider p LEFT JOIN FETCH p.portfolioImages pi WHERE p.id IN :providerIds")
     List<Provider> findAllByIdWithPortfolio(@Param("providerIds") List<UUID> providerIds);
 

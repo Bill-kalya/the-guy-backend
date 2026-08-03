@@ -150,7 +150,16 @@ public class SearchService {
 
         String normalized = normalizeQuery(query);
         return KNOWN_CATEGORIES.stream()
-            .filter(category -> normalizeQuery(category).equals(normalized))
+            .filter(category -> {
+                String cat = normalizeQuery(category);
+                if (cat.equals(normalized)) {
+                    return true;
+                }
+                if (normalized.length() < 3) {
+                    return false;
+                }
+                return cat.contains(normalized) || normalized.contains(cat);
+            })
             .collect(Collectors.toList());
     }
 

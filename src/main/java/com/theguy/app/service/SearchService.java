@@ -43,10 +43,8 @@ public class SearchService {
             int page,
             int size) {
 
-        if (lat == 0.0 && lng == 0.0) {
-            lat = -1.286389;
-            lng = 36.817223;
-        }
+        double effectiveLat = (lat == 0.0 && lng == 0.0) ? -1.286389 : lat;
+        double effectiveLng = (lat == 0.0 && lng == 0.0) ? 36.817223 : lng;
 
         String normalizedQuery = normalizeQuery(query);
         List<String> categories = resolveCategories(normalizedQuery);
@@ -59,9 +57,9 @@ public class SearchService {
                 .build();
         }
 
-        LocationUtils.BoundingBox bbox = LocationUtils.getBoundingBox(lat, lng, radiusMeters);
+        LocationUtils.BoundingBox bbox = LocationUtils.getBoundingBox(effectiveLat, effectiveLng, radiusMeters);
         List<ProviderLocation> locations = providerLocationRepository.findNearbyProviders(
-            lat, lng, radiusMeters,
+            effectiveLat, effectiveLng, radiusMeters,
             bbox.minLat, bbox.maxLat,
             bbox.minLng, bbox.maxLng
         );
@@ -86,7 +84,7 @@ public class SearchService {
                     return null;
                 }
 
-                double distance = LocationUtils.calculateDistance(lat, lng, location.getLatitude(), location.getLongitude());
+                double distance = LocationUtils.calculateDistance(effectiveLat, effectiveLng, location.getLatitude(), location.getLongitude());
                 double distanceScore = Math.max(0, 100 - (distance / 1000.0) * 10);
                 double responseScore = Math.max(0, provider.getResponseRate() * 100);
                 double completionScore = Math.min(100, (provider.getJobsCompleted() / 1000.0) * 100);

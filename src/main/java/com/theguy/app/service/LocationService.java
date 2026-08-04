@@ -180,8 +180,11 @@ public class LocationService {
                         JobStatus.ON_THE_WAY, JobStatus.ARRIVED, JobStatus.IN_PROGRESS,
                         JobStatus.AWAITING_CUSTOMER_CONFIRMATION));
 
+        // Providers with an active job are kept online (they're mid-work and
+        // being tracked); idle providers whose location heartbeat stopped are
+        // taken offline so they don't stay discoverable with stale coords.
         List<Provider> toOffline = staleProviders.stream()
-                .filter(p -> activeJobProviderIds.contains(p.getId()))
+                .filter(p -> !activeJobProviderIds.contains(p.getId()))
                 .collect(Collectors.toList());
 
         for (Provider provider : toOffline) {
@@ -190,7 +193,7 @@ public class LocationService {
         }
         providerRepository.saveAll(toOffline);
 
-        log.info("Marked {} providers offline due to stale location during active jobs ({} idle providers kept online)",
+        log.info("Marked {} idle providers offline due to stale location ({} active providers kept online)",
                 toOffline.size(), staleProviders.size() - toOffline.size());
     }
 }

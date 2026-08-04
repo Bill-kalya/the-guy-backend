@@ -20,14 +20,20 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Value("${WEBSOCKET_ALLOWED_ORIGIN_1:https://app.theguy.co.ke}")
     private String websocketAllowedOrigin1;
 
-    @Value("${WEBSOCKET_ALLOWED_ORIGIN_2:http://localhost:3000}")
+    @Value("${WEBSOCKET_ALLOWED_ORIGIN_2:http://localhost:*}")
     private String websocketAllowedOrigin2;
 
     @Value("${WEBSOCKET_SOCKJS_CLIENT_URL:https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js}")
     private String sockJsClientLibraryUrl;
 
     private String[] websocketAllowedOrigins() {
-        return new String[]{websocketAllowedOrigin1, websocketAllowedOrigin2};
+        return new String[]{
+            websocketAllowedOrigin1,
+            websocketAllowedOrigin2,
+            "https://theguy.co.ke",
+            "https://www.theguy.co.ke",
+            "http://127.0.0.1:*",
+        };
     }
 
 
@@ -43,7 +49,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // NOTE: SockJS client-library URL + allowed origins are configured via application.yml
         // to avoid hardcoding environments.
         registry.addEndpoint("/ws")
-                .setAllowedOrigins(websocketAllowedOrigins())
+                .setAllowedOriginPatterns(websocketAllowedOrigins())
 
                 .withSockJS()
                 .setClientLibraryUrl(sockJsClientLibraryUrl)

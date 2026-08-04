@@ -174,8 +174,19 @@ public class LocationService {
         if (staleIds.isEmpty()) return;
 
         List<Provider> staleProviders = providerRepository.findAllById(staleIds);
+
+        // Only currently-online providers need cleaning; already-offline ones
+        // are a no-op and would otherwise re-log on every sweep.
+        List<Provider> staleOnline = staleProviders.stream()
+                .filter(Provider::isOnline)
+                .collect(Collectors.toList());
+        if (staleOnline.isEmpty()) return;
+
+        List<UUID> staleOnlineIds = staleOnline.stream()
+                .map(Provider::getId)
+                .collect(Collectors.toList());
         List<UUID> activeJobProviderIds = jobRepository.findProviderIdsWithActiveJobs(
-                staleIds,
+                staleOnlineIds,
                 java.util.List.of(JobStatus.REQUESTED, JobStatus.MATCHING, JobStatus.ASSIGNED,
                         JobStatus.ON_THE_WAY, JobStatus.ARRIVED, JobStatus.IN_PROGRESS,
                         JobStatus.AWAITING_CUSTOMER_CONFIRMATION));
@@ -183,9 +194,11 @@ public class LocationService {
         // Providers with an active job are kept online (they're mid-work and
         // being tracked); idle providers whose location heartbeat stopped are
         // taken offline so they don't stay discoverable with stale coords.
-        List<Provider> toOffline = staleProviders.stream()
+        List<Provider> toOffline = staleOnline.stream()
                 .filter(p -> !activeJobProviderIds.contains(p.getId()))
                 .collect(Collectors.toList());
+
+        if (toOffline.isEmpty()) return;
 
         for (Provider provider : toOffline) {
             provider.setOnline(false);
@@ -194,6 +207,6 @@ public class LocationService {
         providerRepository.saveAll(toOffline);
 
         log.info("Marked {} idle providers offline due to stale location ({} active providers kept online)",
-                toOffline.size(), staleProviders.size() - toOffline.size());
+                toOffline.size(), staleOnline.size() - toOffline.size());
     }
 }

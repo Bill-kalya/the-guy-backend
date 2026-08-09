@@ -13,6 +13,8 @@ import java.util.UUID;
 public interface ProviderRepository extends JpaRepository<Provider, UUID> {
     Optional<Provider> findByUserId(UUID userId);
 
+    Optional<Provider> findByClaimCode(String claimCode);
+
     List<Provider> findByIsOnlineTrue();
 
     List<Provider> findByCategoryId(String categoryId);

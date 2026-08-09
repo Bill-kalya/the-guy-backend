@@ -38,6 +38,22 @@ public class ProviderController {
     private final InsightService insightService;
     private final WalletService walletService;
     private final DashboardService dashboardService;
+    private final ProviderClaimService providerClaimService;
+    
+    @PostMapping("/claim")
+    public ResponseEntity<ApiResponse<ProviderResponseDTO>> claimProvider(
+            @Valid @RequestBody ProviderClaimRequest request,
+            Authentication authentication) {
+
+        User user = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Provider provider = providerClaimService.claimProvider(
+                user, request.getPhoneNumber(), request.getClaimCode());
+        ProviderResponseDTO response = providerService.mapToResponseDTO(provider);
+
+        return ResponseEntity.ok(ApiResponse.success("Provider account claimed successfully", response));
+    }
     
     @PostMapping("/register")
     @PreAuthorize("hasRole('PROVIDER')")

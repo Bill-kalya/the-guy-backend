@@ -121,6 +121,9 @@ public class AdminProviderService {
                     .verificationLevel(provider.getVerificationLevel() != null
                             ? provider.getVerificationLevel().name() : "NONE")
                     .isOnline(provider.isOnline())
+                    .accountClaimed(provider.isAccountClaimed())
+                    .claimCode(provider.getClaimCode())
+                    .claimCodeExpiresAt(provider.getClaimCodeExpiresAt())
                     .ratingAvg(provider.getRatingAvg())
                     .totalReviews(provider.getTotalReviews())
                     .jobsCompleted(provider.getJobsCompleted())
@@ -213,6 +216,9 @@ public class AdminProviderService {
                 .providerStatus(provider.getProviderStatus() != null
                         ? provider.getProviderStatus() : "ACTIVE")
                 .isOnline(provider.isOnline())
+                .accountClaimed(provider.isAccountClaimed())
+                .claimCode(provider.getClaimCode())
+                .claimCodeExpiresAt(provider.getClaimCodeExpiresAt())
                 .ratingAvg(provider.getRatingAvg())
                 .totalReviews(provider.getTotalReviews())
                 .jobsCompleted(provider.getJobsCompleted())

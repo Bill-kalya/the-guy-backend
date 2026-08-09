@@ -24,6 +24,14 @@ public class Provider extends BaseEntity {
     
     private boolean isOnline;
     private LocalDateTime lastActiveAt;
+
+    /** True once the provider has claimed (activated) their account via claim code. */
+    private boolean accountClaimed;
+
+    /** Short code used by an imported provider to claim their account. */
+    private String claimCode;
+
+    private LocalDateTime claimCodeExpiresAt;
     
     private double ratingAvg;
     private int totalReviews;

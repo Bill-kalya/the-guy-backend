@@ -18,6 +18,9 @@ public class ProviderDetailDTO {
     private String profileImageUrl;
     private String verificationLevel;
     private boolean isOnline;
+    private boolean accountClaimed;
+    private String claimCode;
+    private LocalDateTime claimCodeExpiresAt;
     private Double ratingAvg;
     private Integer totalReviews;
     private Integer jobsCompleted;

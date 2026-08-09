@@ -84,8 +84,9 @@ public class LocationService {
             .map(ProviderLocation::getProviderId)
             .collect(Collectors.toList());
 
-        List<Provider> providers = providerRepository.findAllById(providerIds);
-
+        List<Provider> providers = providerRepository.findAllById(providerIds).stream()
+                .filter(Provider::isAccountClaimed)
+                .collect(Collectors.toList());
         return providers.stream()
             .map(provider -> {
                 ProviderLocation location = locations.stream()

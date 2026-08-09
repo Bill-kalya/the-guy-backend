@@ -19,6 +19,9 @@ public class ProviderListItemDTO {
     private String verificationLevel;
     private String providerStatus;
     private boolean isOnline;
+    private boolean accountClaimed;
+    private String claimCode;
+    private LocalDateTime claimCodeExpiresAt;
     private Double ratingAvg;
     private Integer totalReviews;
     private Integer jobsCompleted;

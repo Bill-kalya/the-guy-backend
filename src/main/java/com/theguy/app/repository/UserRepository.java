@@ -13,6 +13,11 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
     
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByPhoneNumber(String phoneNumber);
+
+    @Query("SELECT u.phoneNumber FROM User u WHERE u.phoneNumber IS NOT NULL")
+    java.util.List<String> findAllPhoneNumbers();
     
     boolean existsByEmail(String email);
     

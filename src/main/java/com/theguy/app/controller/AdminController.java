@@ -3,6 +3,7 @@ package com.theguy.app.controller;
 import com.theguy.app.dto.*;
 import com.theguy.app.dto.admin.*;
 import com.theguy.app.entity.*;
+import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.UserRepository;
 import com.theguy.app.service.*;
 import com.theguy.app.auth.JwtUtil;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +33,9 @@ public class AdminController {
     private final AdminUserService adminUserService;
     private final AdminProviderService adminProviderService;
     private final ImpersonationService impersonationService;
+    private final ProviderImportService providerImportService;
+    private final ProviderClaimService providerClaimService;
+    private final ProviderRepository providerRepository;
     private final UserRepository userRepository;
 
     @GetMapping("/trust-safety/risk-scores")
@@ -140,6 +145,27 @@ public class AdminController {
     @GetMapping("/providers/{providerId}/performance")
     public ResponseEntity<ApiResponse<ProviderPerformanceDTO>> getProviderPerformance(@PathVariable UUID providerId) {
         return ResponseEntity.ok(ApiResponse.success(adminProviderService.getProviderPerformance(providerId)));
+    }
+
+    @PostMapping("/providers/import")
+    public ResponseEntity<ApiResponse<ProviderImportResultDTO>> importProviders(
+            @RequestParam("file") MultipartFile file) {
+        ProviderImportResultDTO result = providerImportService.importProviders(file);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Imported " + result.getImported() + " of " + result.getTotalRows() + " providers", result));
+    }
+
+    @PostMapping("/providers/{providerId}/claim-code")
+    public ResponseEntity<ApiResponse<ProviderClaimCodeDTO>> regenerateClaimCode(@PathVariable UUID providerId) {
+        String code = providerClaimService.generateClaimCode(providerId);
+        Provider provider = providerRepository.findById(providerId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found"));
+        ProviderClaimCodeDTO dto = ProviderClaimCodeDTO.builder()
+                .providerId(providerId)
+                .claimCode(code)
+                .expiresAt(provider.getClaimCodeExpiresAt())
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(dto));
     }
 
     @GetMapping("/users/summary")

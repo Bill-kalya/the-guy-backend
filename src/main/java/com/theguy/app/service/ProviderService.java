@@ -48,6 +48,7 @@ public class ProviderService {
         
         Provider provider = new Provider();
         provider.setUser(user);
+        provider.setAccountClaimed(true);
         provider.setBio(dto.getBio());
         provider.setCategoryId(dto.getCategoryId());
         provider.setProfileImageUrl(dto.getProfileImageUrl());

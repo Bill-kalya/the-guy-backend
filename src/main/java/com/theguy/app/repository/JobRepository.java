@@ -61,4 +61,17 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
     @Query("SELECT DISTINCT j.provider.id FROM Job j WHERE j.provider.id IN :providerIds AND j.status IN :statuses")
     List<UUID> findProviderIdsWithActiveJobs(@Param("providerIds") List<UUID> providerIds,
                                              @Param("statuses") List<JobStatus> statuses);
+
+    @Query(value = """
+        SELECT j.* FROM jobs j
+        WHERE j.status IN ('REQUESTED', 'MATCHING')
+          AND j.provider_id IS NULL
+          AND j.latitude BETWEEN :minLat AND :maxLat
+          AND j.longitude BETWEEN :minLng AND :maxLng
+        ORDER BY j.created_at DESC
+        """, nativeQuery = true)
+    List<Job> findOpenJobsNear(@Param("minLat") double minLat,
+                               @Param("maxLat") double maxLat,
+                               @Param("minLng") double minLng,
+                               @Param("maxLng") double maxLng);
 }

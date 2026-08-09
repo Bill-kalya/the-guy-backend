@@ -4,6 +4,7 @@ import com.theguy.app.dto.ApiResponse;
 import com.theguy.app.dto.CompleteJobDTO;
 import com.theguy.app.dto.JobRequestDTO;
 import com.theguy.app.dto.JobResponseDTO;
+import com.theguy.app.dto.NearbyJobDTO;
 import com.theguy.app.dto.RejectCompletionDTO;
 import com.theguy.app.entity.Job;
 import com.theguy.app.entity.User;
@@ -62,10 +63,11 @@ public class JobController {
     }
 
     @GetMapping("/nearby")
-    public List<JobResponseDTO> nearbyJobs(
+    public List<NearbyJobDTO> nearbyJobs(
             @RequestParam double lat,
-            @RequestParam double lng) {
-        return jobService.getNearbyJobs(lat, lng);
+            @RequestParam double lng,
+            @RequestParam(defaultValue = "20000") double radius) {
+        return jobService.getNearbyJobs(lat, lng, radius);
     }
 
     @GetMapping("/history")

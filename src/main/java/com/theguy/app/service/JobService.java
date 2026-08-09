@@ -3,6 +3,7 @@ package com.theguy.app.service;
 import com.theguy.app.dto.CompleteJobDTO;
 import com.theguy.app.dto.JobRequestDTO;
 import com.theguy.app.dto.JobResponseDTO;
+import com.theguy.app.dto.NearbyJobDTO;
 import com.theguy.app.dto.RejectCompletionDTO;
 import com.theguy.app.entity.Dispute;
 import com.theguy.app.entity.Job;
@@ -407,16 +408,54 @@ public class JobService {
     }
 
     @Transactional(readOnly = true)
-    public List<JobResponseDTO> getNearbyJobs(double lat, double lng) {
-        List<com.theguy.app.dto.NearbyProviderDTO> nearbyProviders = locationService.findNearbyProviders(lat, lng, 5000, null);
-        List<UUID> providerIds = nearbyProviders.stream()
-                .map(com.theguy.app.dto.NearbyProviderDTO::getId)
-                .collect(Collectors.toList());
+    public List<NearbyJobDTO> getNearbyJobs(double lat, double lng, double radiusMeters) {
+        com.theguy.app.utils.LocationUtils.BoundingBox bbox =
+            com.theguy.app.utils.LocationUtils.getBoundingBox(lat, lng, radiusMeters);
 
-        return jobRepository.findByProviderIdIn(providerIds).stream()
-                .filter(job -> job.getStatus() == JobStatus.REQUESTED || job.getStatus() == JobStatus.MATCHING)
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
+        return jobRepository.findOpenJobsNear(
+                bbox.minLat, bbox.maxLat, bbox.minLng, bbox.maxLng).stream()
+            .map(job -> mapToNearbyJobDTO(job, lat, lng))
+            .sorted(java.util.Comparator.comparingDouble(NearbyJobDTO::getDistance))
+            .collect(Collectors.toList());
+    }
+
+    private NearbyJobDTO mapToNearbyJobDTO(Job job, double lat, double lng) {
+        double distanceKm = 0.0;
+        if (job.getLatitude() != null && job.getLongitude() != null) {
+            distanceKm = com.theguy.app.utils.LocationUtils.calculateDistance(
+                lat, lng, job.getLatitude(), job.getLongitude()) / 1000.0;
+        }
+
+        double price = 0.0;
+        if (job.getPriceEstimateMin() != null && job.getPriceEstimateMax() != null) {
+            price = (job.getPriceEstimateMin() + job.getPriceEstimateMax()) / 2;
+        } else if (job.getPriceEstimateMin() != null) {
+            price = job.getPriceEstimateMin();
+        }
+
+        String customerName = job.getCustomer() != null && job.getCustomer().getFullName() != null
+            ? job.getCustomer().getFullName() : "Customer";
+        String customerPhone = job.getCustomer() != null && job.getCustomer().getPhoneNumber() != null
+            ? job.getCustomer().getPhoneNumber() : "";
+        String customerId = job.getCustomer() != null
+            ? job.getCustomer().getId().toString() : "";
+
+        return NearbyJobDTO.builder()
+            .id(job.getId())
+            .customerId(customerId)
+            .customerName(customerName)
+            .customerPhone(customerPhone)
+            .category(job.getServiceCategory())
+            .description(job.getDescription())
+            .distance(distanceKm)
+            .price(price)
+            .status(job.getStatus().name())
+            .urgency(job.getUrgency() != null ? job.getUrgency().name() : "SCHEDULED")
+            .requestedAt(job.getCreatedAt() != null ? job.getCreatedAt().toString() : null)
+            .pickupLat(job.getLatitude() != null ? job.getLatitude() : 0.0)
+            .pickupLng(job.getLongitude() != null ? job.getLongitude() : 0.0)
+            .hasResponded(false)
+            .build();
     }
 
     @Transactional(readOnly = true)

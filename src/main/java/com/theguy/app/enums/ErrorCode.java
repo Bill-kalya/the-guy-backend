@@ -22,6 +22,13 @@ public enum ErrorCode {
     PROVIDER_BUSY("PROVIDER_BUSY", "This provider is currently busy"),
     PROVIDER_PROFILE_MISSING("PROVIDER_PROFILE_MISSING", "Provider registration not completed"),
     VERIFICATION_REQUIRED("VERIFICATION_REQUIRED", "Please complete verification first"),
+
+    // Provider claim
+    CLAIM_CODE_INVALID("CLAIM_CODE_INVALID", "Invalid claim code"),
+    CLAIM_CODE_EXPIRED("CLAIM_CODE_EXPIRED", "Claim code has expired"),
+    CLAIM_ALREADY_CLAIMED("CLAIM_ALREADY_CLAIMED", "This account has already been claimed"),
+    CLAIM_PHONE_MISMATCH("CLAIM_PHONE_MISMATCH", "Phone number does not match this provider"),
+    CLAIM_USER_LINKED("CLAIM_USER_LINKED", "Your account is already linked to a provider"),
     
     // Booking
     BOOKING_CONFLICT("BOOKING_CONFLICT", "This time slot is no longer available"),

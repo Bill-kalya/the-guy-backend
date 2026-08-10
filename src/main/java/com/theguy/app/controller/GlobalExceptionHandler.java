@@ -180,6 +180,11 @@ public class GlobalExceptionHandler {
         if (message.contains("User not found")) return ErrorCode.NOT_FOUND;
         if (message.contains("Provider profile not completed")) return ErrorCode.PROVIDER_PROFILE_MISSING;
         if (message.contains("Provider not found")) return ErrorCode.NOT_FOUND;
+        if (message.contains("Claim code is required") || message.contains("Invalid claim code")) return ErrorCode.CLAIM_CODE_INVALID;
+        if (message.contains("Claim code has expired")) return ErrorCode.CLAIM_CODE_EXPIRED;
+        if (message.contains("already been claimed")) return ErrorCode.CLAIM_ALREADY_CLAIMED;
+        if (message.contains("Phone number does not match")) return ErrorCode.CLAIM_PHONE_MISMATCH;
+        if (message.contains("already linked to a provider")) return ErrorCode.CLAIM_USER_LINKED;
         if (message.toLowerCase().contains("provider offline") || message.toLowerCase().contains("provider is currently unavailable")) return ErrorCode.PROVIDER_OFFLINE;
         if (message.toLowerCase().contains("location required")) return ErrorCode.LOCATION_REQUIRED;
         if (message.contains("locked")) return ErrorCode.ACCOUNT_LOCKED;

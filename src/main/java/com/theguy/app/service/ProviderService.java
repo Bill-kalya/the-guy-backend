@@ -54,7 +54,11 @@ public class ProviderService {
         provider.setCategoryId(dto.getCategoryId());
         provider.setProfileImageUrl(dto.getProfileImageUrl());
         provider.setVerificationLevel(VerificationLevel.BASIC);
-        provider.setOnline(true);
+        // New providers start offline: they must explicitly toggle "Go online"
+        // (which begins broadcasting live location) before customers can see
+        // them. Auto-onlining at registration was misleading — the ~60s stale
+        // sweep would silently hide them moments later.
+        provider.setOnline(false);
         provider.setDynamicPriceMultiplier(1.0);
         provider.setResponseRate(1.0);
         

@@ -257,17 +257,28 @@ public class AuthController {
                 }
 
                 String userId = jwtUtil.extractUserId(token);
-                if (userId != null && jwtUtil.validateToken(token, userId)) {
+                if (userId != null
+                        && jwtUtil.isRefreshToken(token)
+                        && jwtUtil.validateToken(token, userId)) {
                     User user = userRepository.findByEmail(userId)
                         .orElseThrow(() -> new BadCredentialsException("User not found"));
+
+                    // Rotate: revoke the presented refresh token and issue a fresh pair
+                    try {
+                        redisTemplate.opsForValue().set(blacklistKey, "rotated", 7, TimeUnit.DAYS);
+                    } catch (Exception e) {
+                        log.warn("Redis unavailable for refresh rotation: {}", e.getMessage());
+                    }
 
                     Map<String, Object> claims = new HashMap<>();
                     claims.put("role", user.getRole().name());
                     claims.put("email", user.getEmail());
 
-                    String newAccessToken = jwtUtil.generateToken(userId, claims);
+                    String newAccessToken = jwtUtil.generateToken(user.getEmail(), claims);
+                    String newRefreshToken = jwtUtil.generateRefreshToken(user.getEmail());
                     return ResponseEntity.ok(Map.of(
                         "accessToken", newAccessToken,
+                        "refreshToken", newRefreshToken,
                         "tokenType", "Bearer"
                     ));
                 }
@@ -282,7 +293,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader,
+                                    @RequestBody(required = false) Map<String, Object> body) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             try {
@@ -290,12 +302,22 @@ public class AuthController {
                 String blacklistKey = "token_blacklist:" + jti;
                 try {
                     redisTemplate.opsForValue().set(blacklistKey, "revoked", 7, TimeUnit.DAYS);
-                    log.info("Token revoked: {}", jti);
+                    log.info("Access token revoked: {}", jti);
                 } catch (Exception e) {
                     log.warn("Redis unavailable for token blacklist: {}", e.getMessage());
                 }
             } catch (Exception e) {
                 log.warn("Failed to parse token for logout: {}", e.getMessage());
+            }
+        }
+        // Revoke the refresh token if the client provided it
+        if (body != null && body.get("refreshToken") instanceof String refreshToken) {
+            try {
+                String jti = jwtUtil.getTokenId(refreshToken);
+                redisTemplate.opsForValue().set("token_blacklist:" + jti, "revoked", 7, TimeUnit.DAYS);
+                log.info("Refresh token revoked: {}", jti);
+            } catch (Exception e) {
+                log.warn("Failed to revoke refresh token on logout: {}", e.getMessage());
             }
         }
         return ResponseEntity.ok(ApiResponse.success("Logged out successfully", null));

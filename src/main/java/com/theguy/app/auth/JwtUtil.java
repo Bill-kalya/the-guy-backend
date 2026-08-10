@@ -66,7 +66,16 @@ public class JwtUtil {
     }
     
     public String generateRefreshToken(String userId) {
-        return createToken(userId, new HashMap<>(), refreshExpiration);
+        return createToken(userId, new HashMap<>(Map.of("type", "refresh")), refreshExpiration);
+    }
+
+    public boolean isRefreshToken(String token) {
+        try {
+            Object type = extractClaim(token, claims -> claims.get("type"));
+            return "refresh".equals(type);
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
     private String createToken(String userId, Map<String, Object> claims, Long expirationTime) {

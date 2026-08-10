@@ -1,6 +1,10 @@
 package com.theguy.app.controller;
 
+import com.theguy.app.entity.Provider;
 import com.theguy.app.entity.ProviderLocation;
+import com.theguy.app.entity.User;
+import com.theguy.app.repository.ProviderRepository;
+import com.theguy.app.repository.UserRepository;
 import com.theguy.app.service.LocationService;
 import com.theguy.app.service.NotificationService;
 import lombok.Data;
@@ -26,10 +30,26 @@ public class LocationWebSocketController {
 
     private final LocationService locationService;
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
+    private final ProviderRepository providerRepository;
 
     private final ConcurrentHashMap<UUID, LocalDateTime> lastUpdatePerProvider = new ConcurrentHashMap<>();
 
     private static final Duration MIN_UPDATE_INTERVAL = Duration.ofMillis(500);
+
+    private Provider resolveProvider(String principalName) {
+        String email = principalName;
+        try {
+            UUID uuid = UUID.fromString(principalName);
+            return providerRepository.findByUserId(uuid)
+                    .orElseThrow(() -> new IllegalStateException("Provider profile not found"));
+        } catch (IllegalArgumentException e) {
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalStateException("User not found"));
+            return providerRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new IllegalStateException("Provider profile not found"));
+        }
+    }
 
     /**
      * Provider sends location update every 3-5 seconds
@@ -45,7 +65,7 @@ public class LocationWebSocketController {
             return;
         }
 
-        UUID providerId = UUID.fromString(principal.getName());
+        UUID providerId = resolveProvider(principal.getName()).getId();
 
         if (payload.getLatitude() == null || payload.getLongitude() == null) {
             log.warn("Location update rejected for {}: missing coordinates", providerId);

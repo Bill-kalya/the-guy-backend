@@ -65,7 +65,7 @@ public class NotificationService {
             notifyCustomer(job.getCustomer().getId().toString(), notification);
         }
         if (job.getProvider() != null) {
-            notifyProvider(job.getProvider().getId().toString(), notification);
+            notifyProvider(job.getProvider().getUser().getId().toString(), notification);
         }
     }
     

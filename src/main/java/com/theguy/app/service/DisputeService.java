@@ -114,4 +114,9 @@ public class DisputeService {
     public List<Dispute> getDisputesByStatus(DisputeStatus status) {
         return disputeRepository.findByStatus(status);
     }
+
+    @Transactional(readOnly = true)
+    public Dispute getDisputeForJob(UUID jobId) {
+        return disputeRepository.findByJobId(jobId).orElse(null);
+    }
 }

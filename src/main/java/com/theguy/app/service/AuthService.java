@@ -42,8 +42,12 @@ public class AuthService {
 
     @Transactional
     public void resendVerification(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            // Deliberately indistinguishable from success to prevent account enumeration
+            log.info("Resend verification requested for unknown email (ignored)");
+            return;
+        }
 
         if (user.isVerified()) {
             throw new RuntimeException("Email already verified");
@@ -55,8 +59,12 @@ public class AuthService {
 
     @Transactional
     public void forgotPassword(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            // Deliberately indistinguishable from success to prevent account enumeration
+            log.info("Password reset requested for unknown email (ignored)");
+            return;
+        }
 
         // Issue password reset OTP
         otpService.generateAndSendOtp(email, OtpPurpose.RESET_PASSWORD);

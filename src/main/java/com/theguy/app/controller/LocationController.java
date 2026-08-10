@@ -2,7 +2,11 @@ package com.theguy.app.controller;
 
 import com.theguy.app.dto.ApiResponse;
 import com.theguy.app.dto.NearbyProviderDTO;
+import com.theguy.app.entity.Provider;
 import com.theguy.app.entity.ProviderLocation;
+import com.theguy.app.entity.User;
+import com.theguy.app.repository.ProviderRepository;
+import com.theguy.app.repository.UserRepository;
 import com.theguy.app.service.LocationService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -25,6 +29,22 @@ import java.util.UUID;
 public class LocationController {
 
     private final LocationService locationService;
+    private final UserRepository userRepository;
+    private final ProviderRepository providerRepository;
+
+    private Provider resolveProvider(String principalName) {
+        String email = principalName;
+        try {
+            UUID.fromString(principalName);
+            return providerRepository.findByUserId(UUID.fromString(principalName))
+                    .orElseThrow(() -> new IllegalStateException("Provider profile not found"));
+        } catch (IllegalArgumentException e) {
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalStateException("User not found"));
+            return providerRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new IllegalStateException("Provider profile not found"));
+        }
+    }
 
     /**
      * Update provider location (called every 3-5 seconds by provider app)
@@ -35,11 +55,10 @@ public class LocationController {
             @RequestBody LocationUpdateRequest request,
             Authentication authentication) {
 
-        String userId = authentication.getName();
-        UUID providerId = UUID.fromString(userId);
+        Provider provider = resolveProvider(authentication.getName());
 
         locationService.updateLocation(
-            providerId,
+            provider.getId(),
             request.getLatitude(),
             request.getLongitude(),
             request.getHeading(),

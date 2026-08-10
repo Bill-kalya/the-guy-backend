@@ -23,7 +23,15 @@ public class AppConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(rateLimitInterceptor)
-                .addPathPatterns("/api/auth/login", "/api/auth/register");
+                .addPathPatterns(
+                    "/api/auth/login",
+                    "/api/auth/register",
+                    "/api/auth/resend-otp",
+                    "/api/auth/forgot-password",
+                    "/api/auth/verify-reset-otp",
+                    "/api/auth/reset-password",
+                    "/api/auth/verify-email"
+                );
     }
 
     @Bean

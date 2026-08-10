@@ -9,6 +9,7 @@ import com.theguy.app.enums.JobStatus;
 import com.theguy.app.repository.JobRepository;
 import com.theguy.app.repository.JobRequestRepository;
 import com.theguy.app.repository.ProviderLocationRepository;
+import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.service.NotificationService;
 import com.theguy.app.service.QueueService;
 import com.theguy.app.utils.LocationUtils;
@@ -35,6 +36,7 @@ public class MatchingWorker {
     private final JobRepository jobRepository;
     private final JobRequestRepository jobRequestRepository;
     private final ProviderLocationRepository locationRepository;
+    private final ProviderRepository providerRepository;
     private final NotificationService notificationService;
     
     @Scheduled(fixedDelay = 2000)
@@ -69,8 +71,17 @@ public class MatchingWorker {
             request.setSentAt(LocalDateTime.now());
             jobRequestRepository.save(request);
 
+            // Dispatch to the provider's user id — the app subscribes to /queue/provider/{userId}
+            UUID userId = providerRepository.findById(providerId)
+                .map(provider -> provider.getUser().getId())
+                .orElse(null);
+            if (userId == null) {
+                log.warn("Skipping dispatch to provider {} — no profile", providerId);
+                continue;
+            }
+
             notificationService.sendJobToProvider(
-                providerId.toString(),
+                userId.toString(),
                 Map.of(
                     "type", "NEW_JOB_REQUEST",
                     "job", buildJobPayload(current, providerId)

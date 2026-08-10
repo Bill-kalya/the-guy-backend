@@ -9,10 +9,12 @@ import com.theguy.app.service.WalletService;
 import com.theguy.app.service.FinancialAuditLogService;
 import com.theguy.app.enums.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -28,17 +30,20 @@ public class PaymentGatewayService {
     private final LedgerService ledgerService;
     private final WalletService walletService;
     private final FinancialAuditLogService auditLogService;
+    private final RedisTemplate<String, String> redisTemplate;
 
     public PaymentGatewayService(List<PaymentProvider> providers,
                                   PaymentRepository paymentRepository,
                                   LedgerService ledgerService,
                                   WalletService walletService,
-                                  FinancialAuditLogService auditLogService) {
+                                  FinancialAuditLogService auditLogService,
+                                  RedisTemplate<String, String> redisTemplate) {
         this.providers = providers;
         this.paymentRepository = paymentRepository;
         this.ledgerService = ledgerService;
         this.walletService = walletService;
         this.auditLogService = auditLogService;
+        this.redisTemplate = redisTemplate;
     }
 
     public PaymentProvider getProvider(PaymentMethod method) {
@@ -113,6 +118,27 @@ public class PaymentGatewayService {
         if (payment == null) {
             log.warn("Webhook for unknown checkout: {}", checkoutRequestId);
             return;
+        }
+
+        // Idempotency guard: never reprocess a payment that already reached a terminal state
+        if (payment.getStatus() == PaymentStatus.HELD
+                || payment.getStatus() == PaymentStatus.RELEASED
+                || payment.getStatus() == PaymentStatus.FAILED
+                || payment.getStatus() == PaymentStatus.REFUNDED) {
+            log.info("Webhook ignored — payment {} already in state {}", payment.getId(), payment.getStatus());
+            return;
+        }
+
+        // Short-lived dedupe lock so concurrent webhook deliveries can't both process
+        String lockKey = "webhook_lock:payment:" + payment.getId();
+        try {
+            Boolean acquired = redisTemplate.opsForValue().setIfAbsent(lockKey, "1", Duration.ofMinutes(5));
+            if (Boolean.FALSE.equals(acquired)) {
+                log.info("Webhook ignored — payment {} already being processed", payment.getId());
+                return;
+            }
+        } catch (Exception e) {
+            log.warn("Webhook dedupe lock unavailable for payment {}: {}", payment.getId(), e.getMessage());
         }
 
         if (success) {

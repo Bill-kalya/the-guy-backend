@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -76,17 +77,46 @@ public class JobController {
     }
 
     @PostMapping("/{jobId}/decline")
-    public ResponseEntity<?> declineJob(@PathVariable UUID jobId) {
-        jobService.declineJob(jobId);
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('PROVIDER')")
+    public ResponseEntity<?> declineJob(@PathVariable UUID jobId, Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        var provider = providerRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+        jobService.declineJob(jobId, provider.getId());
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/{jobId}/status")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('PROVIDER')")
     public ResponseEntity<?> updateStatus(
             @PathVariable UUID jobId,
-            @RequestParam JobStatus status) {
-        jobService.updateStatus(jobId, status);
-        return ResponseEntity.ok().build();
+            @RequestBody(required = false) java.util.Map<String, String> body,
+            Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        var provider = providerRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+
+        String raw = body != null ? body.get("status") : null;
+        if (raw == null || raw.isBlank()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("status is required"));
+        }
+
+        // Accept client-friendly values (lowercase) and canonical enum names
+        String normalized = raw.trim().toUpperCase().replace("-", "_").replace(" ", "_");
+        JobStatus status = switch (normalized) {
+            case "ON_THE_WAY", "EN_ROUTE" -> JobStatus.ON_THE_WAY;
+            case "ARRIVED" -> JobStatus.ARRIVED;
+            case "IN_PROGRESS", "STARTED" -> JobStatus.IN_PROGRESS;
+            default -> null;
+        };
+        if (status == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Unsupported status: " + raw));
+        }
+
+        jobService.updateProviderStatus(jobId, provider.getId(), status);
+        return ResponseEntity.ok(ApiResponse.success("Status updated", Map.of("status", status.name())));
     }
 
     @PostMapping("/{jobId}/complete")
@@ -97,8 +127,8 @@ public class JobController {
             .orElseThrow(() -> new RuntimeException("User not found"));
         var provider = providerRepository.findByUserId(user.getId())
             .orElseThrow(() -> new RuntimeException("Provider profile not found"));
-        jobService.completeJob(jobId, provider.getId(), dto);
-        return ResponseEntity.ok(ApiResponse.success("Job marked complete, awaiting customer confirmation", null));
+        Job job = jobService.completeJob(jobId, provider.getId(), dto);
+        return ResponseEntity.ok(ApiResponse.success(jobService.toResponseDTO(job)));
     }
 
     @PostMapping("/{jobId}/confirm-completion")

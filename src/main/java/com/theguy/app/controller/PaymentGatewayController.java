@@ -1,6 +1,9 @@
 package com.theguy.app.controller;
 
 import com.theguy.app.entity.Job;
+import com.theguy.app.entity.Payment;
+import com.theguy.app.entity.Provider;
+import com.theguy.app.entity.User;
 import com.theguy.app.payment.PaymentGatewayService;
 import com.theguy.app.payment.PaymentProvider;
 import com.theguy.app.payment.PaymentResponse;
@@ -8,10 +11,15 @@ import com.theguy.app.payment.mpesa.MpesaPaymentProvider;
 import com.theguy.app.payment.mpesa.MpesaTransaction;
 import com.theguy.app.payment.mpesa.MpesaTransactionStatus;
 import com.theguy.app.repository.JobRepository;
+import com.theguy.app.repository.PaymentRepository;
+import com.theguy.app.repository.ProviderRepository;
+import com.theguy.app.repository.UserRepository;
 import com.theguy.app.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,8 +38,17 @@ public class PaymentGatewayController {
     private final MpesaPaymentProvider mpesaProvider;
     private final PaymentService paymentService;
     private final JobRepository jobRepository;
+    private final UserRepository userRepository;
+    private final ProviderRepository providerRepository;
+    private final PaymentRepository paymentRepository;
+
+    private User requireUser(Authentication auth) {
+        return userRepository.findByEmail(auth.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+    }
 
     @PostMapping("/initiate")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<?> initiatePayment(@RequestBody Map<String, Object> request, Authentication auth) {
         try {
             String jobIdStr = (String) request.get("jobId");
@@ -40,7 +57,15 @@ public class PaymentGatewayController {
             Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found: " + jobIdStr));
 
-            UUID customerId = job.getCustomer().getId();
+            User customer = requireUser(auth);
+            if (!job.getCustomer().getId().equals(customer.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "success", false,
+                    "message", "Not authorized to pay for this job"
+                ));
+            }
+
+            UUID customerId = customer.getId();
             UUID providerId = job.getProvider() != null ? job.getProvider().getId() : null;
             if (providerId == null) {
                 return ResponseEntity.badRequest().body(Map.of(
@@ -85,7 +110,28 @@ public class PaymentGatewayController {
     }
 
     @GetMapping("/{paymentId}/status")
-    public ResponseEntity<?> getPaymentStatus(@PathVariable String paymentId) {
+    public ResponseEntity<?> getPaymentStatus(@PathVariable String paymentId, Authentication auth) {
+        Payment payment = paymentRepository.findById(UUID.fromString(paymentId))
+            .orElseThrow(() -> new RuntimeException("Payment not found: " + paymentId));
+
+        User user = requireUser(auth);
+        boolean isCustomer = payment.getCustomerId() != null && payment.getCustomerId().equals(user.getId());
+        boolean isProvider = false;
+        if (payment.getProviderId() != null) {
+            isProvider = providerRepository.findByUserId(user.getId())
+                .map(p -> p.getId().equals(payment.getProviderId()))
+                .orElse(false);
+        }
+        boolean isAdmin = auth.getAuthorities().stream()
+            .anyMatch(g -> g.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isCustomer && !isProvider && !isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "success", false,
+                "message", "Not authorized to view this payment"
+            ));
+        }
+
         return ResponseEntity.ok(gatewayService.getPaymentStatus(paymentId));
     }
 

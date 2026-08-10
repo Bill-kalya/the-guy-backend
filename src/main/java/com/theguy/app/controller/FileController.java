@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.LinkedMultiValueMap;
@@ -59,6 +60,7 @@ public class FileController {
     private static final long MAX_SIZE_DEFAULT = 5 * 1024 * 1024;
 
     @PostMapping("/upload")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "folder", defaultValue = "general") String folder) {

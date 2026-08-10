@@ -147,7 +147,7 @@ public class JobService {
         );
 
         notificationService.notifyProvider(
-            providerId.toString(),
+            provider.getUser().getId().toString(),
             Map.of("type", "JOB_ACCEPTED_SUCCESS", "jobId", jobId, "customer", job.getCustomer().getFullName())
         );
     }
@@ -170,7 +170,7 @@ public class JobService {
     }
 
     @Transactional
-    public void completeJob(UUID jobId, UUID providerId, CompleteJobDTO dto) {
+    public Job completeJob(UUID jobId, UUID providerId, CompleteJobDTO dto) {
         Job job = validateProviderJob(jobId, providerId);
 
         if (job.getStatus() != JobStatus.IN_PROGRESS) {
@@ -195,6 +195,8 @@ public class JobService {
                    "completionNotes", job.getCompletionNotes() != null ? job.getCompletionNotes() : "",
                    "photos", job.getCompletionPhotos())
         );
+
+        return job;
     }
 
     @Transactional
@@ -240,7 +242,7 @@ public class JobService {
         );
         if (provider != null) {
             notificationService.notifyProvider(
-                provider.getId().toString(),
+                provider.getUser().getId().toString(),
                 Map.of("type", "JOB_PAYMENT_RELEASED", "jobId", jobId)
             );
         }
@@ -345,6 +347,27 @@ public class JobService {
         jobRepository.save(job);
 
         log.info("Job {} status updated to {}", jobId, status);
+    }
+
+    /**
+     * Provider-driven status transition restricted to in-journey states.
+     * Validates that the provider is the one assigned to the job.
+     */
+    @Transactional
+    public void updateProviderStatus(UUID jobId, UUID providerId, JobStatus status) {
+        Job job = validateProviderJob(jobId, providerId);
+
+        if (status != JobStatus.ON_THE_WAY
+                && status != JobStatus.ARRIVED
+                && status != JobStatus.IN_PROGRESS) {
+            throw new IllegalStateException(
+                "Provider can only update status to ON_THE_WAY, ARRIVED, or IN_PROGRESS");
+        }
+
+        job.setStatus(status);
+        jobRepository.save(job);
+
+        log.info("Job {} status updated by provider {} to {}", jobId, providerId, status);
     }
 
     /**
@@ -464,7 +487,9 @@ public class JobService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<Job> jobs = jobRepository.findByCustomerId(user.getId());
-        jobs.addAll(jobRepository.findByProviderId(user.getId()));
+        // Provider jobs are keyed by provider id, not user id
+        providerRepository.findByUserId(user.getId())
+            .ifPresent(p -> jobs.addAll(jobRepository.findByProviderId(p.getId())));
 
         return jobs.stream()
                 .map(this::mapToResponseDTO)
@@ -512,6 +537,33 @@ public class JobService {
         if (previousStatus == JobStatus.MATCHING || previousStatus == JobStatus.REQUESTED) {
             matchingService.startMatching(job, null);
         }
+    }
+
+    /**
+     * Provider-initiated decline that validates the caller was actually
+     * offered (or assigned to) the job before it is returned to the pool.
+     */
+    @Transactional
+    public void declineJob(UUID jobId, UUID providerId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        if (job.getStatus() != JobStatus.MATCHING
+                && job.getStatus() != JobStatus.REQUESTED
+                && job.getStatus() != JobStatus.ASSIGNED) {
+            throw new IllegalStateException("Job must be matching, requested, or assigned before declining");
+        }
+
+        boolean ownsJob = job.getProvider() != null && job.getProvider().getId().equals(providerId);
+        boolean wasOffered = jobRequestRepository.findByJobId(jobId).stream()
+            .anyMatch(r -> r.getProviderId().equals(providerId)
+                && (r.getStatus() == JobRequestStatus.PENDING || r.getStatus() == JobRequestStatus.EXPIRED));
+
+        if (!ownsJob && !wasOffered) {
+            throw new SecurityException("Not authorized to decline this job");
+        }
+
+        declineJob(jobId);
     }
 
     private void expirePendingRequests(UUID jobId, UUID winningProviderId) {
@@ -562,7 +614,9 @@ public class JobService {
 
         boolean isAuthorized = false;
         if (job.getCustomer().getId().equals(userId)) isAuthorized = true;
-        if (job.getProvider() != null && job.getProvider().getId().equals(userId)) isAuthorized = true;
+        if (job.getProvider() != null
+                && (job.getProvider().getId().equals(userId)
+                    || job.getProvider().getUser().getId().equals(userId))) isAuthorized = true;
         if ("ADMIN".equals(role)) isAuthorized = true;
 
         if (!isAuthorized) {
@@ -587,6 +641,10 @@ public class JobService {
         return jobRepository.countByProviderIdAndStatus(providerId, JobStatus.AWAITING_CUSTOMER_CONFIRMATION);
     }
 
+    public JobResponseDTO toResponseDTO(Job job) {
+        return mapToResponseDTO(job);
+    }
+
     private JobResponseDTO mapToResponseDTO(Job job) {
         return JobResponseDTO.builder()
             .id(job.getId())
@@ -604,10 +662,12 @@ public class JobService {
             .provider(job.getProvider() != null ?
                 JobResponseDTO.ProviderSummaryDTO.builder()
                     .id(job.getProvider().getId())
-                    .fullName(job.getProvider().getUser().getFullName())
+                    .fullName(job.getProvider().getUser() != null
+                        ? job.getProvider().getUser().getFullName() : null)
                     .rating(job.getProvider().getRatingAvg())
                     .jobsCompleted(job.getProvider().getJobsCompleted())
-                    .verificationLevel(job.getProvider().getVerificationLevel().name())
+                    .verificationLevel(job.getProvider().getVerificationLevel() != null
+                        ? job.getProvider().getVerificationLevel().name() : null)
                     .build() : null)
             .createdAt(job.getCreatedAt())
             .acceptedAt(job.getAcceptedAt())

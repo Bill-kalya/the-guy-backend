@@ -2,6 +2,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\ProviderPerformance.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\AdminActionRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\QuoteService.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ProviderProfileUpdateRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Category.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\AdminUserService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\CompleteJobDTO.java
@@ -19,8 +20,10 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\RejectCompletionDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ProviderProfileCompletionService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Service.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\utils\CountyCoordinates.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\TrustSafetyService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\worker\MatchingWorker.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\VerificationDocumentAdminDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\UserActionRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\ServiceRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\VerifyOtpRequest.java
@@ -46,6 +49,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\SendMes
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Quote.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\PendingPayoutDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\VerificationDocument.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\TrackingController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\BookingPriceSnapshot.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\CategoryController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\ProviderSummaryDTO.java
@@ -85,6 +89,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\J
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\ProviderPerformanceDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ReputationDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\payment\PaymentResponse.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ProviderClaimService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\JobRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\ReviewRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ChatService.java
@@ -116,6 +121,8 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\LoginRe
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\RiskOverviewDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\config\WebSocketAuthInterceptor.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\ProviderInsightRepository.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ProviderImportService.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\ProviderImportResultDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\PaymentRequestDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\FinancialAuditLogRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\LocationWebSocketController.java
@@ -129,6 +136,7 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\Walle
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ChangePasswordRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\CategoryService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\AcceptJobDTO.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\ProviderBadge.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\WalletTransaction.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Provider.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\payment\RefundResponse.java
@@ -153,17 +161,22 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\Not
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\LedgerEntry.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\repository\JobRequestRepository.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\RiskScoreDTO.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\AdminVerificationService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\VerificationLevel.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\ProviderClaimCodeDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\LocationService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\RiskEngineService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\exception\ProviderNotFoundException.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\TaxRecord.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\AuthService.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ProviderClaimRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\PaymentMethod.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\PricingType.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\payment\PaymentProvider.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\GlobalExceptionHandler.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\ProviderRegistrationDTO.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\NearbyJobDTO.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\utils\PhoneNormalizer.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\payment\mpesa\MpesaTransaction.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\ResendEmailService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\UserListItemDTO.java
@@ -192,9 +205,11 @@ C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\admin\U
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\User.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\FinancialAuditLogService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\enums\QuoteStatus.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\service\TrackingService.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\LocationController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\PerformanceDTO.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\DashboardSummaryDTO.java
+C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\AdminVerificationController.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\dto\RegisterRequest.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\entity\Payout.java
 C:\Users\kalya\projects\the-guy-backend\src\main\java\com\theguy\app\controller\ProviderController.java

@@ -2,6 +2,8 @@ package com.theguy.app.repository;
 
 import com.theguy.app.entity.VerificationDocument;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,4 +29,7 @@ public interface VerificationDocumentRepository extends JpaRepository<Verificati
     void softDeleteByPublicId(@Param("publicId") String publicId);
 
     long countByProviderIdAndStatus(UUID providerId, VerificationDocument.VerificationDocumentStatus status);
+
+    Page<VerificationDocument> findByStatusOrderByCreatedAtAsc(
+            VerificationDocument.VerificationDocumentStatus status, Pageable pageable);
 }

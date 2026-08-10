@@ -1,5 +1,6 @@
 package com.theguy.app.service;
 
+import com.theguy.app.dto.ProviderProfileUpdateRequest;
 import com.theguy.app.dto.ProviderRegistrationDTO;
 import com.theguy.app.dto.ProviderResponseDTO;
 import com.theguy.app.entity.PortfolioImage;
@@ -118,6 +119,23 @@ public class ProviderService {
         providerRepository.save(provider);
         
         log.info("Provider {} online status updated to: {}", providerId, isOnline);
+    }
+    
+    @Transactional
+    public Provider updateProfile(UUID providerId, ProviderProfileUpdateRequest request) {
+        Provider provider = providerRepository.findById(providerId)
+            .orElseThrow(() -> new RuntimeException("Provider not found"));
+        
+        if (request.getBio() != null) {
+            provider.setBio(request.getBio().trim());
+        }
+        if (request.getProfileImageUrl() != null) {
+            provider.setProfileImageUrl(request.getProfileImageUrl());
+        }
+        
+        Provider updated = providerRepository.save(provider);
+        log.info("Provider {} profile updated", providerId);
+        return updated;
     }
     
     @Transactional
@@ -242,6 +260,24 @@ public class ProviderService {
                 .collect(Collectors.toList())
             : java.util.List.<ProviderResponseDTO.PortfolioImageDTO>of();
         
+        var verificationDocDtos = provider.getVerificationDocuments() != null
+            ? provider.getVerificationDocuments().stream()
+                .filter(doc -> doc.getStatus() != VerificationDocument.VerificationDocumentStatus.DELETED)
+                .sorted((a, b) -> {
+                    LocalDateTime aCreated = a.getCreatedAt() != null ? a.getCreatedAt() : LocalDateTime.MIN;
+                    LocalDateTime bCreated = b.getCreatedAt() != null ? b.getCreatedAt() : LocalDateTime.MIN;
+                    return bCreated.compareTo(aCreated);
+                })
+                .map(doc -> ProviderResponseDTO.VerificationDocumentDTO.builder()
+                    .id(doc.getId())
+                    .documentType(doc.getDocumentType() != null ? doc.getDocumentType().name() : null)
+                    .imageUrl(doc.getImageUrl())
+                    .status(doc.getStatus() != null ? doc.getStatus().name() : null)
+                    .rejectionReason(doc.getRejectionReason())
+                    .build())
+                .collect(Collectors.toList())
+            : java.util.List.<ProviderResponseDTO.VerificationDocumentDTO>of();
+
         return ProviderResponseDTO.builder()
             .id(provider.getId())
             .fullName(provider.getUser() != null ? provider.getUser().getFullName() : "Unknown")
@@ -258,6 +294,7 @@ public class ProviderService {
             .repeatClientsPercentage(provider.getRepeatClientsPercentage())
             .isOnline(provider.isOnline())
             .portfolioImages(portfolioDtos)
+            .verificationDocuments(verificationDocDtos)
             .serviceQualityScore(sqs)
             .reviewCount(reviewCount)
             .breakdown(breakdown)

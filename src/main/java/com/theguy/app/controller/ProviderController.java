@@ -130,6 +130,22 @@ public class ProviderController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @PutMapping("/me")
+    @PreAuthorize("hasRole('PROVIDER')")
+    public ResponseEntity<ApiResponse<ProviderResponseDTO>> updateMyProfile(
+            @Valid @RequestBody ProviderProfileUpdateRequest request,
+            Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Provider provider = providerRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+        
+        Provider updated = providerService.updateProfile(provider.getId(), request);
+        ProviderResponseDTO response = providerService.mapToResponseDTO(updated);
+        return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", response));
+    }
+
     @GetMapping("/me/completion")
     @PreAuthorize("hasRole('PROVIDER')")
     public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getProfileCompletion(Authentication authentication) {

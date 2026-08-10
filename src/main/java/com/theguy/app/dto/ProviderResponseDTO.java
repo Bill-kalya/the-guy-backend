@@ -25,6 +25,7 @@ public class ProviderResponseDTO {
     private Double repeatClientsPercentage;
     private Boolean isOnline;
     private List<PortfolioImageDTO> portfolioImages;
+    private List<VerificationDocumentDTO> verificationDocuments;
     private List<ServiceDTO> services;
     
     // SQS fields
@@ -39,6 +40,16 @@ public class ProviderResponseDTO {
         private String imageUrl;
         private String publicId;
         private Integer sortOrder;
+    }
+    
+    @Data
+    @Builder
+    public static class VerificationDocumentDTO {
+        private UUID id;
+        private String documentType;
+        private String imageUrl;
+        private String status;
+        private String rejectionReason;
     }
     
     @Data

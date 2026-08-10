@@ -49,6 +49,9 @@ public class ProviderResponseDTO {
         private String title;
         private PricingType pricingType;
         private BigDecimal basePrice;
+        private BigDecimal minPrice;
+        private BigDecimal maxPrice;
+        private BigDecimal callOutFee;
     }
     
     @Data

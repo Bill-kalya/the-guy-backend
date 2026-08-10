@@ -3,6 +3,7 @@ package com.theguy.app.service;
 import com.theguy.app.dto.NearbyProviderDTO;
 import com.theguy.app.entity.Provider;
 import com.theguy.app.entity.ProviderLocation;
+import com.theguy.app.enums.ProviderBadge;
 import com.theguy.app.repository.ProviderLocationRepository;
 import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.JobRepository;
@@ -13,7 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -114,6 +117,19 @@ public class LocationService {
 
                 int etaMinutes = LocationUtils.calculateETA(distance, 30.0);
 
+                com.theguy.app.entity.Service pricingService = findPricingService(provider);
+                double priceEstimate = resolveFromPrice(pricingService);
+                BigDecimal minPrice = resolvePrice(pricingService, PricingField.MIN);
+                BigDecimal maxPrice = resolvePrice(pricingService, PricingField.MAX);
+                BigDecimal callOutFee = resolvePrice(pricingService, PricingField.CALL_OUT);
+
+                double searchScore = calculateSearchScore(
+                    qualityScore,
+                    distance,
+                    provider.isOnline(),
+                    priceEstimate
+                );
+
                 return NearbyProviderDTO.builder()
                     .id(provider.getId())
                     .name(provider.getUser().getFullName())
@@ -123,7 +139,12 @@ public class LocationService {
                     .longitude(location.getLongitude())
                     .distance(distance)
                     .serviceQualityScore(qualityScore)
-                    .priceEstimate(calculatePriceEstimate(provider))
+                    .badge(ProviderBadge.fromScore(qualityScore))
+                    .priceEstimate(priceEstimate)
+                    .minPrice(minPrice)
+                    .maxPrice(maxPrice)
+                    .callOutFee(callOutFee)
+                    .searchScore(searchScore)
                     .isOnline(provider.isOnline())
                     .verificationLevel(provider.getVerificationLevel() != null
                         ? provider.getVerificationLevel().name()
@@ -134,20 +155,64 @@ public class LocationService {
                     .build();
             })
             .filter(dto -> dto != null)
-            .sorted((a, b) -> Double.compare(a.getDistance(), b.getDistance()))
+            .sorted(
+                Comparator.comparingDouble(NearbyProviderDTO::getSearchScore).reversed()
+                    .thenComparingDouble(NearbyProviderDTO::getDistance))
             .collect(Collectors.toList());
     }
 
-    private Double calculatePriceEstimate(Provider provider) {
-        double basePrice = 500.0;
+    private enum PricingField { MIN, MAX, CALL_OUT }
 
-        double ratingMultiplier = 1.0;
-        if (provider.getRatingAvg() >= 4.5) ratingMultiplier = 1.2;
-        else if (provider.getRatingAvg() >= 4.0) ratingMultiplier = 1.0;
-        else if (provider.getRatingAvg() >= 3.5) ratingMultiplier = 0.9;
-        else ratingMultiplier = 0.8;
+    /**
+     * Resolve the provider's active service used for pricing. Providers set
+     * their own price ranges; SQS influences ranking, never pricing.
+     */
+    private com.theguy.app.entity.Service findPricingService(Provider provider) {
+        if (provider.getServices() == null) {
+            return null;
+        }
+        return provider.getServices().stream()
+            .filter(s -> s.getIsActive() != null && s.getIsActive())
+            .findFirst()
+            .orElse(null);
+    }
 
-        return basePrice * ratingMultiplier;
+    private BigDecimal resolvePrice(com.theguy.app.entity.Service service, PricingField field) {
+        if (service == null) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal value = switch (field) {
+            case MIN -> service.getMinPrice();
+            case MAX -> service.getMaxPrice();
+            case CALL_OUT -> service.getCallOutFee();
+        };
+        return value != null ? value : BigDecimal.ZERO;
+    }
+
+    /**
+     * "From KES X" price: the provider's configured minimum, with a sensible
+     * fallback when no service pricing has been set yet.
+     */
+    private double resolveFromPrice(com.theguy.app.entity.Service service) {
+        if (service != null && service.getMinPrice() != null && service.getMinPrice().doubleValue() > 0) {
+            return service.getMinPrice().doubleValue();
+        }
+        return 500.0;
+    }
+
+    /**
+     * Blended ranking: reputation (40%) + distance (25%) + availability (20%)
+     * + price competitiveness (15%). SQS drives visibility, not pricing.
+     */
+    private double calculateSearchScore(double qualityScore, double distance, boolean online, double fromPrice) {
+        double distanceScore = Math.max(0, 100 - (distance / 1000.0) * 10);
+        double availabilityScore = online ? 100.0 : 40.0;
+        double priceScore = Math.max(0, 100 - Math.min(100, (fromPrice / 1000.0) * 20));
+
+        return (0.40 * qualityScore)
+            + (0.25 * distanceScore)
+            + (0.20 * availabilityScore)
+            + (0.15 * priceScore);
     }
 
     @Transactional(readOnly = true)

@@ -37,6 +37,8 @@ public class Service {
 
     private BigDecimal maxPrice;
 
+    private BigDecimal callOutFee;
+
     private Integer adjustmentPercent = 10;
 
     private Boolean isActive = true;

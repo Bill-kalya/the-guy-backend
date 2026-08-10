@@ -4,6 +4,7 @@ import com.theguy.app.dto.SearchProviderItem;
 import com.theguy.app.dto.SearchProvidersResponse;
 import com.theguy.app.entity.Provider;
 import com.theguy.app.entity.ProviderLocation;
+import com.theguy.app.enums.ProviderBadge;
 import com.theguy.app.repository.ProviderLocationRepository;
 import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.utils.LocationUtils;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -107,19 +109,25 @@ public class SearchService {
                     + (0.10 * completionScore)
                     + (0.05 * verificationScore);
 
+                com.theguy.app.entity.Service pricing = findPricingService(provider);
+
                 return SearchProviderItem.builder()
                     .id(provider.getId())
                     .businessName(provider.getUser().getFullName())
                     .distance(distance)
                     .etaMinutes(LocationUtils.calculateETA(distance, 30.0))
                     .serviceQualityScore(serviceQualityScore)
+                    .badge(ProviderBadge.fromScore(serviceQualityScore))
                     .verified(provider.getVerificationLevel() != null && provider.getVerificationLevel() != com.theguy.app.enums.VerificationLevel.NONE)
                     .rating(provider.getRatingAvg())
                     .completedJobs(provider.getJobsCompleted())
+                    .minPrice(pricing != null ? pricing.getMinPrice() : BigDecimal.ZERO)
+                    .maxPrice(pricing != null ? pricing.getMaxPrice() : BigDecimal.ZERO)
+                    .searchScore(rank)
                     .build();
             })
             .filter(item -> item != null)
-            .sorted(Comparator.comparingDouble(SearchProviderItem::getServiceQualityScore).reversed())
+            .sorted(Comparator.comparingDouble(SearchProviderItem::getSearchScore).reversed())
             .toList();
 
         int fromIndex = Math.max(0, page * size);
@@ -172,6 +180,16 @@ public class SearchService {
             return "";
         }
         return value.trim().toLowerCase(Locale.ENGLISH);
+    }
+
+    private com.theguy.app.entity.Service findPricingService(Provider provider) {
+        if (provider.getServices() == null) {
+            return null;
+        }
+        return provider.getServices().stream()
+            .filter(s -> s.getIsActive() != null && s.getIsActive())
+            .findFirst()
+            .orElse(null);
     }
 
     private String toDisplayName(String value) {

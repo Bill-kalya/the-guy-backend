@@ -48,6 +48,7 @@ public class PricingController {
                 ? svc.getBasePrice() : BigDecimal.valueOf(500));
         config.put("minPrice", svc != null ? svc.getMinPrice() : null);
         config.put("maxPrice", svc != null ? svc.getMaxPrice() : null);
+        config.put("callOutFee", svc != null ? svc.getCallOutFee() : null);
         config.put("adjustmentPercent", svc != null && svc.getAdjustmentPercent() != null
                 ? svc.getAdjustmentPercent() : 10);
 
@@ -77,6 +78,7 @@ public class PricingController {
         svc.setBasePrice(request.getBasePrice());
         svc.setMinPrice(request.getMinPrice());
         svc.setMaxPrice(request.getMaxPrice());
+        svc.setCallOutFee(request.getCallOutFee());
         svc.setAdjustmentPercent(request.getAdjustmentPercent());
         svc.setIsActive(true);
 
@@ -96,6 +98,8 @@ public class PricingController {
         private BigDecimal minPrice;
 
         private BigDecimal maxPrice;
+
+        private BigDecimal callOutFee;
 
         @Min(0) @Max(25)
         private Integer adjustmentPercent = 10;

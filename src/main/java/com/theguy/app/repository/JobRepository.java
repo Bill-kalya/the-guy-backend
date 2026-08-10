@@ -62,6 +62,12 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
     List<UUID> findProviderIdsWithActiveJobs(@Param("providerIds") List<UUID> providerIds,
                                              @Param("statuses") List<JobStatus> statuses);
 
+    @Query("SELECT COUNT(j) > 0 FROM Job j WHERE j.customer.id = :customerId "
+           + "AND j.provider.id = :providerId AND j.status IN :statuses")
+    boolean existsActiveJobBetween(@Param("customerId") UUID customerId,
+                                   @Param("providerId") UUID providerId,
+                                   @Param("statuses") List<JobStatus> statuses);
+
     @Query(value = """
         SELECT j.* FROM jobs j
         WHERE j.status IN ('REQUESTED', 'MATCHING')

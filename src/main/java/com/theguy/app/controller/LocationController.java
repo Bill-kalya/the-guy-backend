@@ -86,11 +86,26 @@ public class LocationController {
     }
 
     /**
-     * Get a specific provider's location
+     * Get a specific provider's location. Callers must be the provider
+     * themselves, a customer with an active job involving the provider, or an admin.
      */
     @GetMapping("/provider/{providerId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getProviderLocation(
-            @PathVariable UUID providerId) {
+            @PathVariable UUID providerId,
+            Authentication authentication) {
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+            .anyMatch(g -> g.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+            User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+            if (!locationService.canTrack(user.getId(), providerId)) {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Not authorized to view this provider's location"));
+            }
+        }
 
         ProviderLocation location = locationService.getProviderLocation(providerId);
         if (location == null) {

@@ -124,7 +124,29 @@ public class LocationWebSocketController {
             return;
         }
 
-        String customerId = headerAccessor.getUser().getName();
+        String principalName = headerAccessor.getUser().getName();
+
+        boolean isAdmin = headerAccessor.getUser() instanceof org.springframework.security.core.Authentication auth
+                && auth.getAuthorities().stream()
+                    .anyMatch(g -> g.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean allowed = isAdmin;
+        if (!allowed) {
+            User user = userRepository.findByEmail(principalName).orElse(null);
+            if (user == null) {
+                log.warn("Tracking request for provider {} from unknown user {}", providerId, principalName);
+                return;
+            }
+            allowed = locationService.canTrack(user.getId(), providerId);
+        }
+
+        if (!allowed) {
+            log.warn("Tracking request denied: user {} has no active job with provider {}",
+                principalName, providerId);
+            return;
+        }
+
+        String customerId = principalName;
 
         ProviderLocation location = locationService.getProviderLocation(providerId);
 

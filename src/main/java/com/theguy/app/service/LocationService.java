@@ -221,6 +221,28 @@ public class LocationService {
             .orElse(null);
     }
 
+    /**
+     * Authorization rule for live-location access:
+     *  - the provider requesting their own location, or
+     *  - a customer with an active job involving the provider.
+     * (Admin is handled by the caller.)
+     */
+    @Transactional(readOnly = true)
+    public boolean canTrack(UUID requesterUserId, UUID providerId) {
+        if (providerRepository.findByUserId(requesterUserId)
+                .map(p -> p.getId().equals(providerId))
+                .orElse(false)) {
+            return true;
+        }
+
+        return jobRepository.existsActiveJobBetween(
+            requesterUserId,
+            providerId,
+            java.util.List.of(JobStatus.REQUESTED, JobStatus.MATCHING, JobStatus.ASSIGNED,
+                    JobStatus.ON_THE_WAY, JobStatus.ARRIVED, JobStatus.IN_PROGRESS,
+                    JobStatus.AWAITING_CUSTOMER_CONFIRMATION));
+    }
+
     @Transactional(readOnly = true)
     public List<ProviderLocation> getAllOnlineProviderLocations() {
         List<Provider> onlineProviders = providerRepository.findByIsOnlineTrue();

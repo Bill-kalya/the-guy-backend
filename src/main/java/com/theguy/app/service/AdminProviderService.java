@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +37,8 @@ public class AdminProviderService {
     public ProviderSummaryDTO getProviderSummary() {
         try {
             long totalProviders = providerRepository.count();
-            long onlineNow = providerRepository.countByIsOnlineTrue();
+            long onlineNow = providerRepository.countByIsOnlineTrueAndLastActiveAtAfter(
+                    LocalDateTime.now().minusMinutes(2));
             long pendingVerification = providerRepository.countByVerificationLevelIn(
                     java.util.List.of(VerificationLevel.NONE, VerificationLevel.BASIC));
             Double avgRating = providerRepository.findAverageRating();
@@ -61,14 +63,15 @@ public class AdminProviderService {
         try {
             PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
             List<Provider> allProviders = providerRepository.findAll(pageRequest.getSort());
+            LocalDateTime onlineSince = LocalDateTime.now().minusMinutes(2);
 
             List<ProviderListItemDTO> filtered = allProviders.stream()
                     .filter(p -> verification == null || verification.isBlank()
                             || (p.getVerificationLevel() != null
                             && p.getVerificationLevel().name().equalsIgnoreCase(verification)))
                     .filter(p -> status == null || status.isBlank()
-                            || ("online".equalsIgnoreCase(status) && p.isOnline())
-                            || ("offline".equalsIgnoreCase(status) && !p.isOnline())
+                            || ("online".equalsIgnoreCase(status) && isFreshlyOnline(p, onlineSince))
+                            || ("offline".equalsIgnoreCase(status) && !isFreshlyOnline(p, onlineSince))
                             || ("active".equalsIgnoreCase(status) && p.getProviderStatus() != null
                             && p.getProviderStatus().equalsIgnoreCase("ACTIVE"))
                             || ("suspended".equalsIgnoreCase(status) && p.getProviderStatus() != null
@@ -200,6 +203,12 @@ public class AdminProviderService {
             log.error("Error fetching provider performance for providerId={}", providerId, e);
             throw e;
         }
+    }
+
+    private boolean isFreshlyOnline(Provider provider, LocalDateTime onlineSince) {
+        return provider.isOnline()
+                && provider.getLastActiveAt() != null
+                && provider.getLastActiveAt().isAfter(onlineSince);
     }
 
     private ProviderListItemDTO mapProviderToListItem(Provider provider) {

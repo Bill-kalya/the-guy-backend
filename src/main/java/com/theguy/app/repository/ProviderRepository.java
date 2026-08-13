@@ -4,8 +4,11 @@ import com.theguy.app.entity.Provider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,6 +32,23 @@ public interface ProviderRepository extends JpaRepository<Provider, UUID> {
     long countByProviderStatus(String providerStatus);
 
     long countByIsOnlineTrue();
+
+    /**
+     * Providers currently flagged online but whose last heartbeat (location
+     * update or availability toggle) is older than the grace window. These are
+     * "ghost" providers and are taken offline by the scheduled sweep.
+     */
+    @Query("SELECT p.id FROM Provider p WHERE p.isOnline = true AND p.lastActiveAt < :threshold")
+    List<UUID> findOnlineSinceBefore(@Param("threshold") LocalDateTime threshold);
+
+    /** Same as {@link #countByIsOnlineTrue()} but requires a fresh heartbeat. */
+    long countByIsOnlineTrueAndLastActiveAtAfter(LocalDateTime threshold);
+
+    /** Heartbeat: refresh last-seen without touching any other column. */
+    @Modifying
+    @Transactional
+    @Query("UPDATE Provider p SET p.lastActiveAt = :timestamp WHERE p.id = :providerId")
+    void updateLastActiveAt(@Param("providerId") UUID providerId, @Param("timestamp") LocalDateTime timestamp);
 
     @Query("SELECT COALESCE(AVG(p.ratingAvg), 0.0) FROM Provider p")
     Double findAverageRating();

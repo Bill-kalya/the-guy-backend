@@ -26,6 +26,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LocationService {
 
+    /** How long a provider may be silent before they're considered offline. */
+    private static final java.time.Duration ONLINE_HEARTBEAT_GRACE = java.time.Duration.ofMinutes(2);
+
+    /** Jobs older than this in a non-terminal state are treated as abandoned. */
+    private static final java.time.Duration ACTIVE_JOB_GRACE = java.time.Duration.ofHours(24);
+
     private final ProviderLocationRepository locationRepository;
     private final ProviderRepository providerRepository;
     private final JobRepository jobRepository;
@@ -44,13 +50,10 @@ public class LocationService {
 
         locationRepository.save(location);
 
-        providerRepository.findById(providerId).ifPresent(provider -> {
-            if (!provider.isOnline()) {
-                provider.setOnline(true);
-                provider.setLastActiveAt(LocalDateTime.now());
-                providerRepository.save(provider);
-            }
-        });
+        // Heartbeat: refresh last-seen on every location update. A provider only
+        // becomes online via the explicit availability toggle; location pings
+        // alone must not silently flip them online.
+        providerRepository.updateLastActiveAt(providerId, LocalDateTime.now());
 
         log.debug("Updated location for provider: {} at ({}, {})", providerId, latitude, longitude);
     }
@@ -256,8 +259,18 @@ public class LocationService {
     @Scheduled(fixedRate = 30_000)
     @Transactional
     public void cleanupStaleLocations() {
-        LocalDateTime staleThreshold = LocalDateTime.now().minusSeconds(60);
-        List<UUID> staleIds = locationRepository.findStaleProviderIds(staleThreshold);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime locationThreshold = now.minusSeconds(60);
+        LocalDateTime heartbeatThreshold = now.minus(ONLINE_HEARTBEAT_GRACE);
+
+        // Providers whose location heartbeat stopped (existing behavior), plus
+        // providers flagged online who have no fresh heartbeat at all. The second
+        // group catches providers who toggled online but never produced a location
+        // row (e.g. no GPS fix) — the location-based sweep alone would never find
+        // them because there is no row to go stale.
+        java.util.Set<UUID> staleIds = new java.util.HashSet<>(
+                locationRepository.findStaleProviderIds(locationThreshold));
+        staleIds.addAll(providerRepository.findOnlineSinceBefore(heartbeatThreshold));
 
         if (staleIds.isEmpty()) return;
 
@@ -273,15 +286,19 @@ public class LocationService {
         List<UUID> staleOnlineIds = staleOnline.stream()
                 .map(Provider::getId)
                 .collect(Collectors.toList());
+        LocalDateTime activeJobFreshSince = now.minus(ACTIVE_JOB_GRACE);
         List<UUID> activeJobProviderIds = jobRepository.findProviderIdsWithActiveJobs(
                 staleOnlineIds,
                 java.util.List.of(JobStatus.REQUESTED, JobStatus.MATCHING, JobStatus.ASSIGNED,
                         JobStatus.ON_THE_WAY, JobStatus.ARRIVED, JobStatus.IN_PROGRESS,
-                        JobStatus.AWAITING_CUSTOMER_CONFIRMATION));
+                        JobStatus.AWAITING_CUSTOMER_CONFIRMATION),
+                activeJobFreshSince);
 
-        // Providers with an active job are kept online (they're mid-work and
-        // being tracked); idle providers whose location heartbeat stopped are
-        // taken offline so they don't stay discoverable with stale coords.
+        // Providers mid-job are kept online (they're being tracked); idle
+        // providers whose heartbeat stopped are taken offline so they don't
+        // stay discoverable — or counted on the dashboard — with stale state.
+        // Jobs older than the grace window in a non-terminal state are treated
+        // as abandoned so a stuck job can't pin a provider online forever.
         List<Provider> toOffline = staleOnline.stream()
                 .filter(p -> !activeJobProviderIds.contains(p.getId()))
                 .collect(Collectors.toList());
@@ -290,11 +307,11 @@ public class LocationService {
 
         for (Provider provider : toOffline) {
             provider.setOnline(false);
-            provider.setLastActiveAt(LocalDateTime.now());
+            provider.setLastActiveAt(now);
         }
         providerRepository.saveAll(toOffline);
 
-        log.info("Marked {} idle providers offline due to stale location ({} active providers kept online)",
+        log.info("Marked {} idle providers offline due to stale heartbeat ({} active providers kept online)",
                 toOffline.size(), staleOnline.size() - toOffline.size());
     }
 }

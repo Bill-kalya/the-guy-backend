@@ -2,8 +2,7 @@ package com.theguy.app.enums;
 
 public enum PaymentMethod {
     MPESA("M-Pesa", true),
-    CARD("Card Payment", false),
-    CASH("Cash", true);
+    CARD("Card (Stripe)", false);
     
     private final String displayName;
     private final boolean requiresMobileNumber;

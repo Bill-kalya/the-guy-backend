@@ -16,4 +16,5 @@ public class PaymentResponse {
     private String status;
     private String message;
     private String redirectUrl;
+    private String clientSecret;
 }

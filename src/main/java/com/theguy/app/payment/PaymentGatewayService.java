@@ -162,9 +162,18 @@ public class PaymentGatewayService {
     private void processSuccessfulPayment(Payment payment) {
         double totalAmount = payment.getAmount().doubleValue();
 
-        // Calculate processor fee (M-Pesa: ~0.5% of transaction)
-        double processorFeePct = 0.5;
-        double processorFee = Math.round(totalAmount * processorFeePct * 100.0) / 100.0;
+        // Calculate processor fee based on payment method
+        // M-Pesa: ~0.5% | Stripe: 2.9% + $0.30 (≈KES 40 fixed)
+        double processorFeePct;
+        double fixedFee;
+        if (payment.getPaymentMethod() == com.theguy.app.enums.PaymentMethod.MPESA) {
+            processorFeePct = 0.5;
+            fixedFee = 0.0;
+        } else {
+            processorFeePct = 2.9;
+            fixedFee = 40.0; // ~KES 40 Stripe fixed fee
+        }
+        double processorFee = Math.round((totalAmount * processorFeePct * 100.0 + fixedFee * 100.0)) / 100.0;
         payment.setProcessorFee(BigDecimal.valueOf(processorFee));
         payment.setProcessorFeePercentage(BigDecimal.valueOf(processorFeePct));
 
@@ -221,7 +230,7 @@ public class PaymentGatewayService {
         ledgerService.recordDoubleEntry(
             AccountCode.ESCROW, AccountCode.PROCESSOR_FEE,
             processorFee, "KES", "JOB_COMPLETED", jobId,
-            "M-Pesa processor fee (0.5%)");
+            payment.getPaymentMethod() + " processor fee");
 
         // Balanced tax entry: DEBIT PLATFORM_REVENUE, CREDIT TAX_LIABILITY
         ledgerService.recordDoubleEntry(

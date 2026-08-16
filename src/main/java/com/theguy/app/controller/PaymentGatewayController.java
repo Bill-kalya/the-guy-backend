@@ -4,12 +4,15 @@ import com.theguy.app.entity.Job;
 import com.theguy.app.entity.Payment;
 import com.theguy.app.entity.Provider;
 import com.theguy.app.entity.User;
+import com.stripe.model.Event;
+import com.theguy.app.enums.PaymentMethod;
 import com.theguy.app.payment.PaymentGatewayService;
 import com.theguy.app.payment.PaymentProvider;
 import com.theguy.app.payment.PaymentResponse;
 import com.theguy.app.payment.mpesa.MpesaPaymentProvider;
 import com.theguy.app.payment.mpesa.MpesaTransaction;
 import com.theguy.app.payment.mpesa.MpesaTransactionStatus;
+import com.theguy.app.payment.stripe.StripePaymentProvider;
 import com.theguy.app.repository.JobRepository;
 import com.theguy.app.repository.PaymentRepository;
 import com.theguy.app.repository.ProviderRepository;
@@ -36,6 +39,7 @@ public class PaymentGatewayController {
 
     private final PaymentGatewayService gatewayService;
     private final MpesaPaymentProvider mpesaProvider;
+    private final StripePaymentProvider stripeProvider;
     private final PaymentService paymentService;
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
@@ -98,6 +102,11 @@ public class PaymentGatewayController {
             result.put("checkoutRequestId", response.getTransactionId());
             result.put("message", response.getMessage());
             result.put("amount", amount.doubleValue());
+            result.put("method", paymentMethod.name());
+
+            if (response.getClientSecret() != null) {
+                result.put("clientSecret", response.getClientSecret());
+            }
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -157,9 +166,32 @@ public class PaymentGatewayController {
     }
 
     @PostMapping("/webhooks/stripe")
-    public ResponseEntity<?> handleStripeWebhook(@RequestBody Map<String, Object> body) {
-        log.info("Stripe webhook received (placeholder)");
-        return ResponseEntity.ok(Map.of("received", true));
+    public ResponseEntity<?> handleStripeWebhook(
+            @RequestBody String payload,
+            @RequestHeader("Stripe-Signature") String sigHeader) {
+        log.info("Stripe webhook received");
+
+        try {
+            Event event = stripeProvider.constructWebhookEvent(payload, sigHeader);
+            Map<String, Object> parsed = stripeProvider.parseWebhookEvent(event);
+            String eventType = (String) parsed.get("eventType");
+            String paymentIntentId = (String) parsed.get("paymentIntentId");
+
+            if (paymentIntentId == null) {
+                log.info("Stripe webhook: no payment intent in event type={}", eventType);
+                return ResponseEntity.ok(Map.of("received", true));
+            }
+
+            Boolean succeeded = (Boolean) parsed.get("succeeded");
+            if (succeeded != null) {
+                gatewayService.confirmPaymentFromWebhook(paymentIntentId, paymentIntentId, succeeded);
+            }
+
+            return ResponseEntity.ok(Map.of("received", true));
+        } catch (Exception e) {
+            log.error("Stripe webhook processing failed: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/webhooks/paypal")

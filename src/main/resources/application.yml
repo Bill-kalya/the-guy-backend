@@ -119,3 +119,9 @@ mpesa:
   pass-key: ${MPESA_PASS_KEY:}
   callback-url: ${MPESA_CALLBACK_URL:https://api.theguy.co.ke/api/payments/webhooks/mpesa}
   environment: ${MPESA_ENVIRONMENT:sandbox}
+
+# Stripe (Card Payments)
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY:}
+  publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}

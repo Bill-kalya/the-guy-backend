@@ -150,6 +150,19 @@ public class JobService {
             provider.getUser().getId().toString(),
             Map.of("type", "JOB_ACCEPTED_SUCCESS", "jobId", jobId, "customer", job.getCustomer().getFullName())
         );
+
+        // Email: job accepted — notify customer
+        String customerEmail = job.getCustomer().getEmail();
+        if (customerEmail != null) {
+            notificationService.sendEmail(
+                customerEmail,
+                "Job Accepted — #" + jobId.toString().substring(0, 8),
+                "<p>Hi " + (job.getCustomer().getFullName() != null ? job.getCustomer().getFullName() : "there") + ",</p>"
+                    + "<p>A provider has accepted your job <strong>#" + jobId.toString().substring(0, 8) + "</strong>.</p>"
+                    + "<p>You can track their progress in the app.</p>",
+                "A provider has accepted your job #" + jobId.toString().substring(0, 8) + ". Track progress in the app."
+            );
+        }
     }
 
     @Transactional
@@ -244,6 +257,32 @@ public class JobService {
             notificationService.notifyProvider(
                 provider.getUser().getId().toString(),
                 Map.of("type", "JOB_PAYMENT_RELEASED", "jobId", jobId)
+            );
+
+            // Email: payment released to provider
+            String providerEmail = provider.getUser().getEmail();
+            if (providerEmail != null) {
+                notificationService.sendEmail(
+                    providerEmail,
+                    "Payment Released — Job #" + jobId.toString().substring(0, 8),
+                    "<p>Hi " + (provider.getUser().getFullName() != null ? provider.getUser().getFullName() : "there") + ",</p>"
+                        + "<p>Your earnings for job <strong>#" + jobId.toString().substring(0, 8) + "</strong> have been released to your wallet.</p>"
+                        + "<p>Log in to view your balance and request a payout.</p>",
+                    "Your earnings for job #" + jobId.toString().substring(0, 8) + " have been released to your wallet."
+                );
+            }
+        }
+
+        // Email: job completed to customer
+        String customerEmail = job.getCustomer().getEmail();
+        if (customerEmail != null) {
+            notificationService.sendEmail(
+                customerEmail,
+                "Job Completed — #" + jobId.toString().substring(0, 8),
+                "<p>Hi " + (job.getCustomer().getFullName() != null ? job.getCustomer().getFullName() : "there") + ",</p>"
+                    + "<p>Your job <strong>#" + jobId.toString().substring(0, 8) + "</strong> has been completed.</p>"
+                    + "<p>Payment has been released to the provider. Thank you for using The Guy!</p>",
+                "Your job #" + jobId.toString().substring(0, 8) + " has been completed. Payment released."
             );
         }
     }

@@ -3,6 +3,7 @@ package com.theguy.app.service;
 import com.theguy.app.dto.ReviewDTO;
 import com.theguy.app.dto.ReviewSummaryDTO;
 import com.theguy.app.entity.Job;
+import com.theguy.app.utils.InputSanitizer;
 import com.theguy.app.entity.ProviderStatistics;
 import com.theguy.app.entity.Review;
 import com.theguy.app.repository.JobRepository;
@@ -58,7 +59,7 @@ public class ReviewService {
             .problemResolution(dto.getProblemResolution())
             .recommendation(dto.getRecommendation())
             .serviceQualityScore(sqs)
-            .comment(dto.getComment())
+            .comment(InputSanitizer.stripHtml(dto.getComment()))
             .build();
         
         Review saved = reviewRepository.save(review);

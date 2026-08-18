@@ -8,6 +8,7 @@ import com.theguy.app.dto.RejectCompletionDTO;
 import com.theguy.app.entity.Dispute;
 import com.theguy.app.entity.Job;
 import com.theguy.app.entity.JobRequest;
+import com.theguy.app.utils.InputSanitizer;
 import com.theguy.app.entity.Provider;
 import com.theguy.app.entity.User;
 import com.theguy.app.enums.DisputeStatus;
@@ -70,7 +71,7 @@ public class JobService {
         Job job = new Job();
         job.setCustomer(customer);
         job.setServiceCategory(dto.getCategory());
-        job.setDescription(dto.getDescription());
+        job.setDescription(InputSanitizer.stripHtml(dto.getDescription()));
         job.setStatus(JobStatus.REQUESTED);
         job.setUrgency(dto.getUrgency());
         job.setPriceEstimateMin(priceEstimate.getMinPrice());
@@ -157,7 +158,7 @@ public class JobService {
             notificationService.sendEmail(
                 customerEmail,
                 "Job Accepted — #" + jobId.toString().substring(0, 8),
-                "<p>Hi " + (job.getCustomer().getFullName() != null ? job.getCustomer().getFullName() : "there") + ",</p>"
+                "<p>Hi " + InputSanitizer.encodeForHtml(job.getCustomer().getFullName() != null ? job.getCustomer().getFullName() : "there") + ",</p>"
                     + "<p>A provider has accepted your job <strong>#" + jobId.toString().substring(0, 8) + "</strong>.</p>"
                     + "<p>You can track their progress in the app.</p>",
                 "A provider has accepted your job #" + jobId.toString().substring(0, 8) + ". Track progress in the app."
@@ -191,7 +192,7 @@ public class JobService {
         }
 
         job.setStatus(JobStatus.AWAITING_CUSTOMER_CONFIRMATION);
-        job.setCompletionNotes(dto.getCompletionNotes());
+        job.setCompletionNotes(InputSanitizer.stripHtml(dto.getCompletionNotes()));
         job.setCompletionPhotos(dto.getCompletionPhotos() != null ? dto.getCompletionPhotos() : List.of());
         job.setCompletionLatitude(dto.getLatitude());
         job.setCompletionLongitude(dto.getLongitude());
@@ -265,7 +266,7 @@ public class JobService {
                 notificationService.sendEmail(
                     providerEmail,
                     "Payment Released — Job #" + jobId.toString().substring(0, 8),
-                    "<p>Hi " + (provider.getUser().getFullName() != null ? provider.getUser().getFullName() : "there") + ",</p>"
+                    "<p>Hi " + InputSanitizer.encodeForHtml(provider.getUser().getFullName() != null ? provider.getUser().getFullName() : "there") + ",</p>"
                         + "<p>Your earnings for job <strong>#" + jobId.toString().substring(0, 8) + "</strong> have been released to your wallet.</p>"
                         + "<p>Log in to view your balance and request a payout.</p>",
                     "Your earnings for job #" + jobId.toString().substring(0, 8) + " have been released to your wallet."
@@ -279,7 +280,7 @@ public class JobService {
             notificationService.sendEmail(
                 customerEmail,
                 "Job Completed — #" + jobId.toString().substring(0, 8),
-                "<p>Hi " + (job.getCustomer().getFullName() != null ? job.getCustomer().getFullName() : "there") + ",</p>"
+                "<p>Hi " + InputSanitizer.encodeForHtml(job.getCustomer().getFullName() != null ? job.getCustomer().getFullName() : "there") + ",</p>"
                     + "<p>Your job <strong>#" + jobId.toString().substring(0, 8) + "</strong> has been completed.</p>"
                     + "<p>Payment has been released to the provider. Thank you for using The Guy!</p>",
                 "Your job #" + jobId.toString().substring(0, 8) + " has been completed. Payment released."

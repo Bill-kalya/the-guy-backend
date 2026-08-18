@@ -3,6 +3,7 @@ package com.theguy.app.service;
 import com.theguy.app.dto.MessageDto;
 import com.theguy.app.dto.SendMessageRequest;
 import com.theguy.app.entity.Message;
+import com.theguy.app.utils.InputSanitizer;
 import com.theguy.app.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class ChatService {
         Message message = new Message();
         message.setRoomId(request.getRoomId());
         message.setSenderId(request.getSenderId());
-        message.setMessage(request.getMessage());
+        message.setMessage(InputSanitizer.stripHtml(request.getMessage()));
         message.setRead(false);
 
         Message savedMessage = messageRepository.save(message);

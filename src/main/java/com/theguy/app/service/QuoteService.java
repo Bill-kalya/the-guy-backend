@@ -6,6 +6,7 @@ import com.theguy.app.enums.JobStatus;
 import com.theguy.app.enums.QuoteStatus;
 import com.theguy.app.repository.JobRepository;
 import com.theguy.app.repository.QuoteRepository;
+import com.theguy.app.utils.InputSanitizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ public class QuoteService {
                 .providerId(providerId)
                 .customerId(job.getCustomer().getId())
                 .amount(amount)
-                .description(description)
+                .description(InputSanitizer.stripHtml(description))
                 .estimatedDurationMinutes(estimatedDurationMinutes)
                 .status(QuoteStatus.PENDING)
                 .expiresAt(LocalDateTime.now().plusDays(2))
@@ -83,7 +84,7 @@ public class QuoteService {
         }
 
         quote.setStatus(QuoteStatus.REJECTED);
-        quote.setRejectionReason(reason);
+        quote.setRejectionReason(InputSanitizer.stripHtml(reason));
         quote.setRespondedAt(LocalDateTime.now());
 
         Quote saved = quoteRepository.save(quote);

@@ -6,6 +6,7 @@ import com.theguy.app.entity.VerificationDocument;
 import com.theguy.app.enums.VerificationLevel;
 import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.VerificationDocumentRepository;
+import com.theguy.app.utils.InputSanitizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -54,7 +55,7 @@ public class AdminVerificationService {
     public void reject(UUID documentId, UUID adminId, String reason) {
         VerificationDocument doc = getPendingDocument(documentId);
         doc.setStatus(VerificationDocument.VerificationDocumentStatus.REJECTED);
-        doc.setRejectionReason(reason);
+        doc.setRejectionReason(InputSanitizer.stripHtml(reason));
         doc.setReviewedAt(LocalDateTime.now());
         doc.setReviewedBy(adminId);
         verificationDocumentRepository.save(doc);

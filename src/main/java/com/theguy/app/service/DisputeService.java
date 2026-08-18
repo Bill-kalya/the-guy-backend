@@ -10,6 +10,7 @@ import com.theguy.app.enums.JobStatus;
 import com.theguy.app.repository.DisputeRepository;
 import com.theguy.app.repository.JobRepository;
 import com.theguy.app.repository.UserRepository;
+import com.theguy.app.utils.InputSanitizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -43,7 +44,7 @@ public class DisputeService {
         Dispute dispute = Dispute.builder()
                 .job(job)
                 .openedBy(user)
-                .reason(reason)
+                .reason(InputSanitizer.stripHtml(reason))
                 .status(DisputeStatus.OPEN)
                 .build();
 
@@ -79,7 +80,7 @@ public class DisputeService {
         dispute.setStatus(DisputeStatus.RESOLVED);
         dispute.setRefundAmount(refundAmount);
         dispute.setProviderPenalty(providerPenalty);
-        dispute.setResolutionNotes(notes);
+        dispute.setResolutionNotes(InputSanitizer.stripHtml(notes));
         dispute.setResolvedAt(LocalDateTime.now());
         Dispute saved = disputeRepository.save(dispute);
 
@@ -95,7 +96,7 @@ public class DisputeService {
         Dispute dispute = disputeRepository.findById(disputeId)
                 .orElseThrow(() -> new RuntimeException("Dispute not found"));
         dispute.setStatus(DisputeStatus.REJECTED);
-        dispute.setResolutionNotes(notes);
+        dispute.setResolutionNotes(InputSanitizer.stripHtml(notes));
         dispute.setResolvedAt(LocalDateTime.now());
         Dispute saved = disputeRepository.save(dispute);
 

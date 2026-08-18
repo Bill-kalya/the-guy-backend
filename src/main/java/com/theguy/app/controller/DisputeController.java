@@ -95,18 +95,21 @@ public class DisputeController {
     @Data
     public static class OpenDisputeRequest {
         @NotNull private UUID jobId;
-        @NotNull private String reason;
+        @NotNull @jakarta.validation.constraints.Size(max = 2000, message = "Reason cannot exceed 2000 characters")
+        private String reason;
     }
 
     @Data
     public static class ResolveDisputeRequest {
         private Double refundAmount;
         private Double providerPenalty;
+        @jakarta.validation.constraints.Size(max = 2000, message = "Notes cannot exceed 2000 characters")
         private String notes;
     }
 
     @Data
     public static class RejectDisputeRequest {
+        @jakarta.validation.constraints.Size(max = 2000, message = "Notes cannot exceed 2000 characters")
         private String notes;
     }
 }

@@ -3,6 +3,7 @@ package com.theguy.app.service;
 import com.theguy.app.dto.ProviderProfileUpdateRequest;
 import com.theguy.app.dto.ProviderRegistrationDTO;
 import com.theguy.app.dto.ProviderResponseDTO;
+import com.theguy.app.utils.InputSanitizer;
 import com.theguy.app.entity.PortfolioImage;
 import com.theguy.app.entity.Provider;
 import com.theguy.app.entity.ProviderLocation;
@@ -50,7 +51,7 @@ public class ProviderService {
         Provider provider = new Provider();
         provider.setUser(user);
         provider.setAccountClaimed(true);
-        provider.setBio(dto.getBio());
+        provider.setBio(InputSanitizer.stripHtml(dto.getBio()));
         provider.setCategoryId(dto.getCategoryId());
         provider.setProfileImageUrl(dto.getProfileImageUrl());
         provider.setVerificationLevel(VerificationLevel.BASIC);
@@ -131,7 +132,7 @@ public class ProviderService {
             .orElseThrow(() -> new RuntimeException("Provider not found"));
         
         if (request.getBio() != null) {
-            provider.setBio(request.getBio().trim());
+            provider.setBio(InputSanitizer.stripHtml(request.getBio().trim()));
         }
         if (request.getProfileImageUrl() != null) {
             provider.setProfileImageUrl(request.getProfileImageUrl());

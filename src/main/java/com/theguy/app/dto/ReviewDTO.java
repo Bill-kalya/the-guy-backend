@@ -74,5 +74,6 @@ public class ReviewDTO {
     @Max(value = 100, message = "Score must be between 0 and 100")
     private Integer recommendation;
     
+    @Size(max = 2000, message = "Comment cannot exceed 2000 characters")
     private String comment;
 }

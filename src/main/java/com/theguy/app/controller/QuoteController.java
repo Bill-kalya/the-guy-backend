@@ -137,6 +137,7 @@ public class QuoteController {
         private UUID jobId;
         @NotNull @DecimalMin("50.00") @DecimalMax("1000000.00")
         private BigDecimal amount;
+        @jakarta.validation.constraints.Size(max = 2000, message = "Description cannot exceed 2000 characters")
         private String description;
         @Min(15) @Max(1440)
         private Integer estimatedDurationMinutes = 60;
@@ -144,6 +145,7 @@ public class QuoteController {
 
     @Data
     public static class RejectQuoteRequest {
+        @jakarta.validation.constraints.Size(max = 2000, message = "Reason cannot exceed 2000 characters")
         private String reason;
     }
 

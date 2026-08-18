@@ -3,6 +3,7 @@ package com.theguy.app.service;
 import com.theguy.app.dto.UpdateProfileRequest;
 import com.theguy.app.dto.UserDto;
 import com.theguy.app.entity.User;
+import com.theguy.app.utils.InputSanitizer;
 import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,9 +38,9 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (request.getFirstName() != null && request.getLastName() != null) {
-            user.setFullName(request.getFirstName() + " " + request.getLastName());
+            user.setFullName(InputSanitizer.stripHtml(request.getFirstName()) + " " + InputSanitizer.stripHtml(request.getLastName()));
         } else if (request.getFirstName() != null) {
-            user.setFullName(request.getFirstName());
+            user.setFullName(InputSanitizer.stripHtml(request.getFirstName()));
         }
 
         if (request.getPhone() != null) {

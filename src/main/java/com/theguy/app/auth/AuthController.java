@@ -8,6 +8,7 @@ import com.theguy.app.dto.AuthResponse;
 import com.theguy.app.dto.GoogleAuthRequest;
 import com.theguy.app.dto.ResetPasswordRequest;
 import com.theguy.app.dto.StructuredErrorResponse;
+import com.theguy.app.utils.InputSanitizer;
 import com.theguy.app.enums.ErrorCode;
 import com.theguy.app.service.AuthService;
 import com.theguy.app.entity.User;
@@ -137,7 +138,7 @@ public class AuthController {
         }
         
         User user = new User();
-        user.setFullName(request.getFullName());
+        user.setFullName(InputSanitizer.stripHtml(request.getFullName()));
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole() != null ? request.getRole() : Role.CUSTOMER);

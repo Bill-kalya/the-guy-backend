@@ -30,7 +30,13 @@ public class AppConfig implements WebMvcConfigurer {
                     "/api/auth/forgot-password",
                     "/api/auth/verify-reset-otp",
                     "/api/auth/reset-password",
-                    "/api/auth/verify-email"
+                    "/api/auth/verify-email",
+                    "/api/files/**",
+                    "/api/reviews/**",
+                    "/api/payments/**",
+                    "/api/search/**",
+                    "/api/providers/nearby",
+                    "/api/providers/location"
                 );
     }
 

@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 public class ProviderImportService {
 
     private static final int BATCH_SIZE = 100;
+    private static final int MAX_ROWS = 10_000;
     private static final String EMAIL_DOMAIN = "@unclaimed.theguy.local";
 
     private final ProviderRepository providerRepository;
@@ -70,6 +71,9 @@ public class ProviderImportService {
 
             for (CSVRecord record : parser) {
                 totalRows++;
+                if (totalRows > MAX_ROWS) {
+                    throw new IllegalArgumentException("CSV exceeds maximum row limit of " + MAX_ROWS);
+                }
                 String name = trimOrNull(record.get("name"));
                 String rawPhone = trimOrNull(record.get("phone"));
                 String categoryName = trimOrNull(record.get("category"));

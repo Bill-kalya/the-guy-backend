@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -26,6 +27,12 @@ import java.util.UUID;
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class AdminController {
+
+    private static final long MAX_CSV_SIZE = 5 * 1024 * 1024;
+    private static final int MAX_CSV_ROWS = 10_000;
+    private static final Set<String> ALLOWED_CSV_TYPES = Set.of(
+        "text/csv", "application/vnd.ms-excel", "application/csv"
+    );
 
     private final RiskEngineService riskEngineService;
     private final AdminActionService adminActionService;
@@ -150,7 +157,32 @@ public class AdminController {
     @PostMapping("/providers/import")
     public ResponseEntity<ApiResponse<ProviderImportResultDTO>> importProviders(
             @RequestParam("file") MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("File is empty"));
+        }
+
+        if (file.getSize() > MAX_CSV_SIZE) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("File too large. Max 5MB for CSV import."));
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_CSV_TYPES.contains(contentType)) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("File type not allowed. Use CSV format."));
+        }
+
+        String filename = file.getOriginalFilename();
+        if (filename == null || (!filename.toLowerCase().endsWith(".csv") && !filename.toLowerCase().endsWith(".tsv"))) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("File extension not allowed. Use .csv or .tsv."));
+        }
+
         ProviderImportResultDTO result = providerImportService.importProviders(file);
+
+        if (result.getTotalRows() > MAX_CSV_ROWS) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(
+                "CSV exceeds maximum row limit of " + MAX_CSV_ROWS + "."));
+        }
+
         return ResponseEntity.ok(ApiResponse.success(
                 "Imported " + result.getImported() + " of " + result.getTotalRows() + " providers", result));
     }

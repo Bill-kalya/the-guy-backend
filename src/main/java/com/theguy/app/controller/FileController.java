@@ -20,6 +20,11 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HexFormat;
@@ -59,6 +64,11 @@ public class FileController {
     private static final long MAX_SIZE_DOCUMENTS = 10 * 1024 * 1024;
     private static final long MAX_SIZE_DEFAULT = 5 * 1024 * 1024;
 
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp");
+
+    private static final int MAX_IMAGE_WIDTH = 4096;
+    private static final int MAX_IMAGE_HEIGHT = 4096;
+
     @PostMapping("/upload")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> uploadFile(
@@ -78,6 +88,11 @@ public class FileController {
             return ResponseEntity.badRequest().body(ApiResponse.error("File type not allowed. Use JPG, PNG, or WebP."));
         }
 
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || !hasAllowedExtension(originalFilename)) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("File extension not allowed. Use .jpg, .jpeg, .png, or .webp."));
+        }
+
         long maxSize = switch (folder) {
             case "profile", "avatars" -> MAX_SIZE_PROFILE;
             case "portfolio" -> MAX_SIZE_PORTFOLIO;
@@ -87,6 +102,24 @@ public class FileController {
         if (file.getSize() > maxSize) {
             return ResponseEntity.badRequest().body(ApiResponse.error(
                 "File too large. Max " + (maxSize / 1024 / 1024) + "MB for " + folder));
+        }
+
+        try {
+            if (!passesMagicByteValidation(file, contentType)) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("File content does not match declared type."));
+            }
+        } catch (IOException e) {
+            log.error("Failed to validate magic bytes", e);
+            return ResponseEntity.badRequest().body(ApiResponse.error("Could not read file for validation."));
+        }
+
+        try {
+            if (!passesDimensionCheck(file)) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(
+                    "Image dimensions exceed limit. Max " + MAX_IMAGE_WIDTH + "x" + MAX_IMAGE_HEIGHT + " pixels."));
+            }
+        } catch (IOException e) {
+            log.error("Failed to validate image dimensions", e);
         }
 
         if (cloudName == null || cloudName.isBlank()
@@ -236,5 +269,48 @@ public class FileController {
             verificationDocumentRepository.save(doc);
             log.info("Soft-deleted verification document: {}", publicId);
         });
+    }
+
+    private boolean hasAllowedExtension(String filename) {
+        String lower = filename.toLowerCase();
+        return ALLOWED_EXTENSIONS.stream().anyMatch(ext -> lower.endsWith("." + ext));
+    }
+
+    private boolean passesMagicByteValidation(MultipartFile file, String declaredContentType) throws IOException {
+        try (InputStream is = file.getInputStream();
+             BufferedInputStream bis = new BufferedInputStream(is)) {
+            byte[] header = new byte[12];
+            int read = bis.read(header);
+            if (read < 4) return false;
+
+            return switch (declaredContentType) {
+                case "image/jpeg" -> isJpeg(header);
+                case "image/png" -> isPng(header);
+                case "image/webp" -> isWebp(header);
+                default -> false;
+            };
+        }
+    }
+
+    private boolean isJpeg(byte[] h) {
+        return (h[0] & 0xFF) == 0xFF && (h[1] & 0xFF) == 0xD8 && (h[2] & 0xFF) == 0xFF;
+    }
+
+    private boolean isPng(byte[] h) {
+        return (h[0] & 0xFF) == 0x89 && (h[1] & 0xFF) == 0x50
+            && (h[2] & 0xFF) == 0x4E && (h[3] & 0xFF) == 0x47;
+    }
+
+    private boolean isWebp(byte[] h) {
+        return h[0] == 'R' && h[1] == 'I' && h[2] == 'F' && h[3] == 'F'
+            && h[8] == 'W' && h[9] == 'E' && h[10] == 'B' && h[11] == 'P';
+    }
+
+    private boolean passesDimensionCheck(MultipartFile file) throws IOException {
+        try (InputStream is = file.getInputStream()) {
+            BufferedImage image = ImageIO.read(is);
+            if (image == null) return true;
+            return image.getWidth() <= MAX_IMAGE_WIDTH && image.getHeight() <= MAX_IMAGE_HEIGHT;
+        }
     }
 }

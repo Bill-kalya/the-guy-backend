@@ -120,6 +120,7 @@ public class FileController {
             }
         } catch (IOException e) {
             log.error("Failed to validate image dimensions", e);
+            return ResponseEntity.badRequest().body(ApiResponse.error("Could not read file for dimension validation."));
         }
 
         if (cloudName == null || cloudName.isBlank()

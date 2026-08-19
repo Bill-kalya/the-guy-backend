@@ -41,6 +41,10 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         "payment", new int[]{  5,    60 },  // 5/min
         "search",  new int[]{ 100,   60 },  // 100/min
         "location",new int[]{  4,    60 },  // 4/min (~every 15s)
+        "job",     new int[]{ 30,    60 },  // 30/min (job CRUD)
+        "dispute", new int[]{ 10,    60 },  // 10/min (dispute ops)
+        "chat",    new int[]{ 60,    60 },  // 60/min (messages)
+        "wallet",  new int[]{ 20,    60 },  // 20/min (wallet queries)
         "general", new int[]{ 120,   60 }   // 120/min fallback
     );
 
@@ -49,7 +53,11 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         "review",   Set.of("/api/reviews"),
         "payment",  Set.of("/api/payments"),
         "search",   Set.of("/api/search", "/api/providers/nearby"),
-        "location", Set.of("/api/providers/location")
+        "location", Set.of("/api/providers/location"),
+        "job",      Set.of("/api/jobs"),
+        "dispute",  Set.of("/api/disputes"),
+        "chat",     Set.of("/api/chat"),
+        "wallet",   Set.of("/api/wallet")
     );
 
     @Override

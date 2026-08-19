@@ -59,8 +59,9 @@ public class JobController {
     }
 
     @GetMapping
-    public List<JobResponseDTO> getJobs() {
-        return jobService.getAllJobs();
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
+    public List<JobResponseDTO> getJobs(Authentication auth) {
+        return jobService.getHistory(auth.getName());
     }
 
     @GetMapping("/nearby")

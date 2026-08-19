@@ -36,7 +36,11 @@ public class AppConfig implements WebMvcConfigurer {
                     "/api/payments/**",
                     "/api/search/**",
                     "/api/providers/nearby",
-                    "/api/providers/location"
+                    "/api/providers/location",
+                    "/api/jobs/**",
+                    "/api/disputes/**",
+                    "/api/chat/**",
+                    "/api/wallet/**"
                 );
     }
 

@@ -57,8 +57,12 @@ otp:
 logging:
   level:
     com.theguy.app: ${LOG_LEVEL:INFO}
+    org.apache.catalina: WARN
+    org.apache.coyote: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+  file:
+    name: logs/app.log
 
 resend:
   api-key: ${RESEND_API_KEY}
@@ -90,6 +94,8 @@ server:
     max-threads: 100
     min-spare-threads: 5
     accept-count: 50
+    accesslog:
+      enabled: false
 
 # External URLs
 api:

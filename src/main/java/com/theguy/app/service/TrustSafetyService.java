@@ -167,31 +167,49 @@ public class TrustSafetyService {
 
         Page<Object[]> dbPage = providerRepository.findModerationQueue(normalizedStatus, PageRequest.of(page, size));
 
+        // Native query returns p.* as raw columns + risk_score_val + risk_level_val.
+        // Extract provider IDs (column 0 of each row) and fetch entities in bulk.
+        List<UUID> providerIds = dbPage.getContent().stream()
+                .map(row -> (UUID) row[0])
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<UUID, Provider> providerMap = providerIds.isEmpty()
+                ? Map.of()
+                : providerRepository.findAllById(providerIds).stream()
+                    .collect(Collectors.toMap(Provider::getId, p -> p));
+
         List<Map<String, Object>> items = dbPage.getContent().stream().map(row -> {
-            // row[0] = Provider (entity), row[1] = risk_score_val, row[2] = risk_level_val
-            Provider p = (Provider) row[0];
-            Object riskScoreRaw = row[1];
-            Object riskLevelRaw = row[2];
+            UUID providerId = (UUID) row[0];
+            Provider p = providerMap.get(providerId);
+
+            Object riskScoreRaw = row[row.length - 2];
+            Object riskLevelRaw = row[row.length - 1];
 
             Integer riskScore = riskScoreRaw instanceof Number ? ((Number) riskScoreRaw).intValue() : null;
             String riskLevel = riskLevelRaw != null ? riskLevelRaw.toString() : null;
 
-            User user = p.getUser();
             Map<String, Object> item = new LinkedHashMap<>();
-            item.put("providerId", p.getId());
-            item.put("userId", user != null ? user.getId() : null);
-            item.put("fullName", user != null ? user.getFullName() : "Unknown");
-            item.put("email", user != null ? user.getEmail() : "");
-            item.put("category", p.getCategoryId());
-            item.put("status", p.getProviderStatus() != null ? p.getProviderStatus() : "ACTIVE");
-            item.put("isOnline", p.isOnline());
-            item.put("ratingAvg", p.getRatingAvg());
-            item.put("jobsCompleted", p.getJobsCompleted());
-            item.put("jobsCancelled", p.getJobsCancelled());
-            item.put("verificationLevel", p.getVerificationLevel() != null ? p.getVerificationLevel().name() : "NONE");
+            if (p != null) {
+                User user = p.getUser();
+                item.put("providerId", p.getId());
+                item.put("userId", user != null ? user.getId() : null);
+                item.put("fullName", user != null ? user.getFullName() : "Unknown");
+                item.put("email", user != null ? user.getEmail() : "");
+                item.put("category", p.getCategoryId());
+                item.put("status", p.getProviderStatus() != null ? p.getProviderStatus() : "ACTIVE");
+                item.put("isOnline", p.isOnline());
+                item.put("ratingAvg", p.getRatingAvg());
+                item.put("jobsCompleted", p.getJobsCompleted());
+                item.put("jobsCancelled", p.getJobsCancelled());
+                item.put("verificationLevel", p.getVerificationLevel() != null ? p.getVerificationLevel().name() : "NONE");
+                item.put("createdAt", p.getCreatedAt());
+            } else {
+                item.put("providerId", providerId);
+                item.put("fullName", "Unknown");
+            }
             item.put("riskScore", riskScore);
             item.put("riskLevel", riskLevel);
-            item.put("createdAt", p.getCreatedAt());
             return item;
         }).collect(Collectors.toList());
 

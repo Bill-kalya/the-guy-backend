@@ -9,8 +9,8 @@ spring:
     username: ${PGUSER}
     password: ${PGPASSWORD}
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
+      maximum-pool-size: 15
+      minimum-idle: 5
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
@@ -57,8 +57,12 @@ otp:
 logging:
   level:
     com.theguy.app: ${LOG_LEVEL:INFO}
+    org.apache.catalina: WARN
+    org.apache.coyote: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+  file:
+    name: logs/app.log
 
 resend:
   api-key: ${RESEND_API_KEY}
@@ -69,10 +73,18 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: when-authorized
+  metrics:
+    tags:
+      application: the-guy-backend
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.75,0.95,0.99
 
 server:
   error:
@@ -82,6 +94,8 @@ server:
     max-threads: 100
     min-spare-threads: 5
     accept-count: 50
+    accesslog:
+      enabled: false
 
 # External URLs
 api:
@@ -119,3 +133,15 @@ mpesa:
   pass-key: ${MPESA_PASS_KEY:}
   callback-url: ${MPESA_CALLBACK_URL:https://api.theguy.co.ke/api/payments/webhooks/mpesa}
   environment: ${MPESA_ENVIRONMENT:sandbox}
+  # Safaricom callback IP whitelist (empty = allow all, for sandbox testing)
+  allowed-callback-ips: ${MPESA_ALLOWED_CALLBACK_IPS:}
+
+# Stripe (Card Payments)
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY:}
+  publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+
+# Firebase (Push Notifications)
+firebase:
+  config-path: ${FIREBASE_CONFIG_PATH:classpath:firebase-service-account.json}

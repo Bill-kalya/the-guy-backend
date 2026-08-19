@@ -2,6 +2,7 @@ package com.theguy.app.service;
 
 import com.theguy.app.entity.*;
 import com.theguy.app.enums.DisputeStatus;
+import com.theguy.app.enums.Role;
 import com.theguy.app.exception.ProviderNotFoundException;
 import com.theguy.app.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -251,6 +252,25 @@ public class TrustSafetyService {
 
         logAdminAction(adminId, AdminAction.ActionType.PROVIDER_UNSUSPEND, providerId, reason, ip, userAgent);
         log.info("Provider {} reinstated by admin {}: {}", providerId, adminId, reason);
+    }
+
+    @Transactional
+    public void demoteProvider(UUID providerId, String reason, UUID adminId, String ip, String userAgent) {
+        Provider provider = providerRepository.findById(providerId)
+                .orElseThrow(() -> new ProviderNotFoundException(providerId));
+
+        provider.setProviderStatus("INACTIVE");
+        provider.setOnline(false);
+        providerRepository.save(provider);
+
+        User user = provider.getUser();
+        if (user != null && user.getRole() == Role.PROVIDER) {
+            user.setRole(Role.CUSTOMER);
+            userRepository.save(user);
+        }
+
+        logAdminAction(adminId, AdminAction.ActionType.PROVIDER_DEMOTE, providerId, reason, ip, userAgent);
+        log.info("Provider {} demoted to customer by admin {}: {}", providerId, adminId, reason);
     }
 
     private void logAdminAction(UUID adminId, AdminAction.ActionType actionType,

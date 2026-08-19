@@ -89,6 +89,18 @@ public class AdminTrustSafetyController {
         return ResponseEntity.ok(ApiResponse.success("Provider reinstated", null));
     }
 
+    @PostMapping("/providers/{providerId}/demote")
+    public ResponseEntity<ApiResponse<Void>> demoteProvider(
+            @PathVariable UUID providerId,
+            @RequestBody(required = false) Map<String, String> body,
+            HttpServletRequest request
+    ) {
+        String reason = body != null ? body.getOrDefault("reason", "Demoted to customer by admin") : "Demoted to customer by admin";
+        trustSafetyService.demoteProvider(providerId, reason, getAdminId(),
+                request.getRemoteAddr(), request.getHeader("User-Agent"));
+        return ResponseEntity.ok(ApiResponse.success("Provider demoted to customer", null));
+    }
+
     private UUID getAdminId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getPrincipal() == null) {

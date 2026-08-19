@@ -127,6 +127,8 @@ mpesa:
   pass-key: ${MPESA_PASS_KEY:}
   callback-url: ${MPESA_CALLBACK_URL:https://api.theguy.co.ke/api/payments/webhooks/mpesa}
   environment: ${MPESA_ENVIRONMENT:sandbox}
+  # Safaricom callback IP whitelist (empty = allow all, for sandbox testing)
+  allowed-callback-ips: ${MPESA_ALLOWED_CALLBACK_IPS:}
 
 # Stripe (Card Payments)
 stripe:

@@ -3,7 +3,9 @@ package com.theguy.app.payment;
 import com.theguy.app.entity.Payment;
 import com.theguy.app.enums.PaymentMethod;
 import com.theguy.app.enums.PaymentStatus;
+import com.theguy.app.enums.DisputeStatus;
 import com.theguy.app.repository.PaymentRepository;
+import com.theguy.app.repository.DisputeRepository;
 import com.theguy.app.service.LedgerService;
 import com.theguy.app.service.WalletService;
 import com.theguy.app.service.FinancialAuditLogService;
@@ -25,8 +27,11 @@ import java.util.UUID;
 @Service
 public class PaymentGatewayService {
 
+    private static final int DISPUTE_WINDOW_HOURS = 48; // 48-hour hold before release
+
     private final List<PaymentProvider> providers;
     private final PaymentRepository paymentRepository;
+    private final DisputeRepository disputeRepository;
     private final LedgerService ledgerService;
     private final WalletService walletService;
     private final FinancialAuditLogService auditLogService;
@@ -34,12 +39,14 @@ public class PaymentGatewayService {
 
     public PaymentGatewayService(List<PaymentProvider> providers,
                                   PaymentRepository paymentRepository,
+                                  DisputeRepository disputeRepository,
                                   LedgerService ledgerService,
                                   WalletService walletService,
                                   FinancialAuditLogService auditLogService,
                                   RedisTemplate<String, String> redisTemplate) {
         this.providers = providers;
         this.paymentRepository = paymentRepository;
+        this.disputeRepository = disputeRepository;
         this.ledgerService = ledgerService;
         this.walletService = walletService;
         this.auditLogService = auditLogService;
@@ -60,6 +67,17 @@ public class PaymentGatewayService {
                                                 PaymentMethod method, Map<String, Object> metadata) {
         PaymentProvider provider = getProvider(method);
 
+        // Idempotency: check for duplicate payment within 5 minutes
+        String idempotencyKey = metadata.getOrDefault("idempotencyKey", "").toString();
+        if (!idempotencyKey.isBlank()) {
+            Payment existing = paymentRepository.findByIdempotencyKey(idempotencyKey).orElse(null);
+            if (existing != null) {
+                log.info("Duplicate payment blocked: idempotencyKey={}, existingPaymentId={}",
+                    idempotencyKey, existing.getId());
+                throw new IllegalStateException("Payment already in progress with this idempotency key");
+            }
+        }
+
         String reference = "PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
         Payment payment = new Payment();
@@ -70,6 +88,9 @@ public class PaymentGatewayService {
         payment.setStatus(PaymentStatus.PENDING);
         payment.setPaymentMethod(method);
         payment.setTransactionReference(reference);
+        if (!idempotencyKey.isBlank()) {
+            payment.setIdempotencyKey(idempotencyKey);
+        }
         payment = paymentRepository.save(payment);
 
         metadata.put("paymentId", payment.getId().toString());
@@ -199,6 +220,27 @@ public class PaymentGatewayService {
         if (payment == null || payment.getStatus() != PaymentStatus.HELD) {
             log.warn("No HELD payment found for job completion: jobId={}", jobId);
             return;
+        }
+
+        // Dispute hold window: funds are locked for 48 hours after job completion
+        // This allows customers time to raise disputes before funds are released
+        if (payment.getPaidAt() != null) {
+            LocalDateTime earliestRelease = payment.getPaidAt().plusHours(DISPUTE_WINDOW_HOURS);
+            if (LocalDateTime.now().isBefore(earliestRelease)) {
+                log.info("Escrow release blocked: payment {} within dispute window ({}h remaining)",
+                    paymentId, Duration.between(LocalDateTime.now(), earliestRelease).toHours());
+                throw new IllegalStateException("Funds are in a 48-hour dispute hold window. "
+                    + "Release available at: " + earliestRelease);
+            }
+        }
+
+        // Check for open disputes on this job before releasing
+        // (DisputeService already blocks new disputes, but this is a safety check)
+        var openDispute = disputeRepository.findByJobId(jobId);
+        if (openDispute.isPresent() && openDispute.get().getStatus() == DisputeStatus.OPEN) {
+            log.warn("Escrow release blocked: open dispute on job {}", jobId);
+            throw new IllegalStateException("Cannot release escrow: job has an open dispute. "
+                + "Dispute ID: " + openDispute.get().getId());
         }
 
         double totalAmount = payment.getAmount().doubleValue();

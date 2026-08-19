@@ -18,8 +18,10 @@ import com.theguy.app.repository.PaymentRepository;
 import com.theguy.app.repository.ProviderRepository;
 import com.theguy.app.repository.UserRepository;
 import com.theguy.app.service.PaymentService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,9 +29,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -45,6 +46,9 @@ public class PaymentGatewayController {
     private final UserRepository userRepository;
     private final ProviderRepository providerRepository;
     private final PaymentRepository paymentRepository;
+
+    @Value("${mpesa.allowed-callback-ips:}")
+    private String allowedCallbackIps;
 
     private User requireUser(Authentication auth) {
         return userRepository.findByEmail(auth.getName())
@@ -145,8 +149,24 @@ public class PaymentGatewayController {
     }
 
     @PostMapping("/webhooks/mpesa")
-    public ResponseEntity<?> handleMpesaWebhook(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> handleMpesaWebhook(@RequestBody Map<String, Object> body,
+                                                  HttpServletRequest request) {
         log.info("M-Pesa webhook received");
+
+        // IP whitelist validation for M-Pesa callbacks
+        if (!allowedCallbackIps.isBlank()) {
+            String clientIp = getClientIp(request);
+            Set<String> allowedIps = Arrays.stream(allowedCallbackIps.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
+
+            if (!allowedIps.contains(clientIp)) {
+                log.warn("M-Pesa webhook rejected: unauthorized IP {}", clientIp);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("ResultCode", 1, "ResultDesc", "Unauthorized IP"));
+            }
+        }
 
         try {
             MpesaTransaction txn = mpesaProvider.processCallback(body);
@@ -163,6 +183,15 @@ public class PaymentGatewayController {
             log.error("M-Pesa webhook processing failed: {}", e.getMessage(), e);
             return ResponseEntity.ok(Map.of("ResultCode", 1, "ResultDesc", e.getMessage()));
         }
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        // Check X-Forwarded-For first (for reverse proxies/load balancers)
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            return xff.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     @PostMapping("/webhooks/stripe")

@@ -2,6 +2,7 @@ package com.theguy.app.service;
 
 import com.theguy.app.entity.Payout;
 import com.theguy.app.entity.Provider;
+import com.theguy.app.entity.Wallet;
 import com.theguy.app.enums.PayoutStatus;
 import com.theguy.app.enums.VerificationLevel;
 import com.theguy.app.enums.DisputeStatus;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +23,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class PayoutService {
+
+    private static final int PAYOUT_COOLDOWN_MINUTES = 30; // 30 min between payouts
+    private static final int MAX_PAYOUTS_PER_DAY = 3; // Max 3 payouts per day
 
     private final PayoutRepository payoutRepository;
     private final ProviderRepository providerRepository;
@@ -44,9 +49,46 @@ public class PayoutService {
             throw new IllegalStateException("Withdrawal blocked: identity verification required. Current level: " + level);
         }
 
+        // Fraud check 1: Open disputes
         long openDisputes = disputeRepository.countByStatusAndJob_Provider_Id(DisputeStatus.OPEN, providerId);
         if (openDisputes > 0) {
             throw new IllegalStateException("Withdrawal blocked: " + openDisputes + " open dispute(s) must be resolved first");
+        }
+
+        // Fraud check 2: Payout cooldown (30 minutes between payouts)
+        List<Payout> recentPayouts = payoutRepository.findByProviderIdOrderByCreatedAtDesc(providerId);
+        if (!recentPayouts.isEmpty()) {
+            Payout lastPayout = recentPayouts.get(0);
+            if (lastPayout.getCreatedAt() != null) {
+                Duration sinceLastPayout = Duration.between(lastPayout.getCreatedAt(), LocalDateTime.now());
+                if (sinceLastPayout.toMinutes() < PAYOUT_COOLDOWN_MINUTES) {
+                    long minutesRemaining = PAYOUT_COOLDOWN_MINUTES - sinceLastPayout.toMinutes();
+                    throw new IllegalStateException("Withdrawal blocked: please wait " + minutesRemaining
+                        + " minutes between payout requests");
+                }
+            }
+        }
+
+        // Fraud check 3: Daily payout limit (max 3 per day)
+        LocalDateTime dayStart = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
+        long payoutsToday = recentPayouts.stream()
+            .filter(p -> p.getCreatedAt() != null && p.getCreatedAt().isAfter(dayStart))
+            .count();
+        if (payoutsToday >= MAX_PAYOUTS_PER_DAY) {
+            throw new IllegalStateException("Withdrawal blocked: maximum " + MAX_PAYOUTS_PER_DAY
+                + " payouts per day reached");
+        }
+
+        // Fraud check 4: Insufficient wallet balance
+        Wallet wallet = walletService.getOrCreateWallet(providerId);
+        if (wallet.getAvailableBalance() < amount) {
+            throw new IllegalStateException("Withdrawal blocked: insufficient balance. Available: KES "
+                + String.format("%.2f", wallet.getAvailableBalance()));
+        }
+
+        // Fraud check 5: Negative wallet balance (shouldn't happen, but safety check)
+        if (wallet.getAvailableBalance() < 0) {
+            throw new IllegalStateException("Withdrawal blocked: negative wallet balance detected");
         }
 
         // Create payout entity first to get the ID for reservation

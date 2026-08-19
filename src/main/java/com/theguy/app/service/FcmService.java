@@ -67,7 +67,7 @@ public class FcmService {
                     .build())
                 .build();
 
-            BatchResponse response = FirebaseMessaging.getInstance().sendEach(message);
+            BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
 
             if (response.getFailureCount() > 0) {
                 List<SendResponse> failed = response.getResponses().stream()
@@ -78,8 +78,8 @@ public class FcmService {
 
                 failed.forEach(r -> {
                     String token = tokens.get(response.getResponses().indexOf(r)).getToken();
-                    if (r.getException() != null &&
-                        r.getException() instanceof FirebaseMessagingException fme) {
+                    if (r.getException() instanceof FirebaseMessagingException) {
+                        FirebaseMessagingException fme = (FirebaseMessagingException) r.getException();
                         if (fme.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED ||
                             fme.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT) {
                             fcmTokenRepository.deleteByToken(token);

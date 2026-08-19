@@ -49,11 +49,14 @@ public class Payment extends BaseEntity {
     
     @Column(columnDefinition = "TEXT")
     private String metadata;
-    
+
+    @Column(name = "idempotency_key", unique = true, length = 64)
+    private String idempotencyKey;
+
     private LocalDateTime paidAt;
-    
+
     private LocalDateTime releasedAt;
-    
+
     private LocalDateTime refundedAt;
     
     private String failureReason;
